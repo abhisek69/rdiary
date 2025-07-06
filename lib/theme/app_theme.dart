@@ -4,13 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   Color _primaryColor = Colors.deepPurple;
-  Color accentColor = Colors.deepPurple;
+  Color _secondaryColor = Colors.amber;
+
   ThemeProvider() {
     _loadPreferences();
   }
 
   ThemeMode get themeMode => _themeMode;
   Color get primaryColor => _primaryColor;
+  Color get secondaryColor => _secondaryColor;
 
   ThemeData get lightTheme => ThemeData(
     brightness: Brightness.light,
@@ -20,7 +22,10 @@ class ThemeProvider extends ChangeNotifier {
       backgroundColor: _primaryColor,
       foregroundColor: Colors.white,
     ),
-    colorScheme: ColorScheme.light(primary: _primaryColor),
+    colorScheme: ColorScheme.light(
+      primary: _primaryColor,
+      secondary: _secondaryColor,
+    ),
   );
 
   ThemeData get darkTheme => ThemeData(
@@ -31,7 +36,10 @@ class ThemeProvider extends ChangeNotifier {
       backgroundColor: Colors.black,
       foregroundColor: _primaryColor,
     ),
-    colorScheme: ColorScheme.dark(primary: _primaryColor),
+    colorScheme: ColorScheme.dark(
+      primary: _primaryColor,
+      secondary: _secondaryColor,
+    ),
   );
 
   void toggleTheme(bool isDark) {
@@ -46,13 +54,21 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateSecondaryColor(Color color) {
+    _secondaryColor = color;
+    _savePreferences();
+    notifyListeners();
+  }
+
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final isDark = prefs.getBool('isDark') ?? false;
-    final colorValue = prefs.getInt('primaryColor') ?? Colors.deepPurple.value;
+    final primaryColorValue = prefs.getInt('primaryColor') ?? Colors.deepPurple.value;
+    final secondaryColorValue = prefs.getInt('secondaryColor') ?? Colors.amber.value;
 
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    _primaryColor = Color(colorValue);
+    _primaryColor = Color(primaryColorValue);
+    _secondaryColor = Color(secondaryColorValue);
     notifyListeners();
   }
 
@@ -60,5 +76,6 @@ class ThemeProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDark', _themeMode == ThemeMode.dark);
     await prefs.setInt('primaryColor', _primaryColor.value);
+    await prefs.setInt('secondaryColor', _secondaryColor.value);
   }
 }

@@ -45,6 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Divider(
+              color: Colors.grey.withOpacity(0.4),
+              thickness: 1,
+            ),
+          ),
           const SizedBox(height: 10),
           Expanded(
             child: notes.isEmpty
@@ -83,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () => Navigator.pushNamed(
           context,
           '/add',

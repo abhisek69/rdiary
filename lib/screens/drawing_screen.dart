@@ -19,29 +19,55 @@ class _DrawingScreenState extends State<DrawingScreen> {
   final GlobalKey _painterKey = GlobalKey();
   late PainterController _controller;
   Color _selectedColor = Colors.black;
+  Future<ui.Image> _createWhiteImage(double width, double height) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final paint = Paint()..color = Colors.white;
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, height), paint);
+
+    final picture = recorder.endRecording();
+    return await picture.toImage(width.toInt(), height.toInt());
+  }
 
   @override
   void initState() {
     super.initState();
-    _controller = PainterController()
-      ..freeStyleMode = FreeStyleMode.draw
-      ..freeStyleColor = _selectedColor
-      ..freeStyleStrokeWidth = 4.0;
+    _initController(); // async init
+  }
+
+  Future<void> _initController() async {
+    final whiteImage = await _createWhiteImage(1000,1000);
+
+    setState(() {
+      _controller =
+          PainterController()
+            ..background = ImageBackgroundDrawable(
+              image: whiteImage,
+              // size: const Size(1000, 1000),
+            )
+            ..freeStyleMode = FreeStyleMode.draw
+            ..freeStyleColor = _selectedColor
+            ..freeStyleStrokeWidth = 4.0;
+    });
   }
 
   Future<void> _saveDrawing() async {
     try {
-      final renderBox = _painterKey.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox =
+          _painterKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get canvas size')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to get canvas size')));
         return;
       }
 
       final Size canvasSize = renderBox.size;
       final ui.Image rendered = await _controller.renderImage(canvasSize);
-      final ByteData? byteData = await rendered.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? byteData = await rendered.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       if (byteData == null) throw Exception("Failed to convert image");
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
@@ -51,24 +77,25 @@ class _DrawingScreenState extends State<DrawingScreen> {
 
       Navigator.pop(context, file.path);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving drawing: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving drawing: $e')));
     }
   }
 
   void _pickColor() async {
     final picked = await showDialog<Color>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Pick a color"),
-        content: SingleChildScrollView(
-          child: BlockPicker(
-            pickerColor: _selectedColor,
-            onColorChanged: (color) => Navigator.pop(context, color),
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Pick a color"),
+            content: SingleChildScrollView(
+              child: BlockPicker(
+                pickerColor: _selectedColor,
+                onColorChanged: (color) => Navigator.pop(context, color),
+              ),
+            ),
           ),
-        ),
-      ),
     );
 
     if (picked != null) {
@@ -98,12 +125,18 @@ class _DrawingScreenState extends State<DrawingScreen> {
             IconButton(
               tooltip: 'Draw Mode',
               icon: const Icon(Icons.brush),
-              onPressed: () => setState(() => _controller.freeStyleMode = FreeStyleMode.draw),
+              onPressed:
+                  () => setState(
+                    () => _controller.freeStyleMode = FreeStyleMode.draw,
+                  ),
             ),
             IconButton(
               tooltip: 'Erase Mode',
               icon: const Icon(Icons.remove_circle),
-              onPressed: () => setState(() => _controller.freeStyleMode = FreeStyleMode.erase),
+              onPressed:
+                  () => setState(
+                    () => _controller.freeStyleMode = FreeStyleMode.erase,
+                  ),
             ),
             IconButton(
               tooltip: 'Clear Canvas',
