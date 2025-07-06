@@ -1,12 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rdiary/screens/SplashScreen.dart';
 import 'package:rdiary/screens/addNotes.dart';
 import 'package:rdiary/screens/home.dart';
+import 'package:rdiary/screens/login_screen.dart';
 import 'package:rdiary/screens/settings.dart';
+import 'package:rdiary/utils/loading_helper.dart'; // Add loading helper imports
 import 'theme/app_theme.dart';
 import 'models/note_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     ChangeNotifierProvider(create: (_) => NoteProvider(), child: DiaryApp()),
   );
@@ -28,13 +35,15 @@ class DiaryApp extends StatelessWidget {
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
-            initialRoute: '/',
+            home: const SplashScreen(), // Set SplashScreen as the home screen
             onGenerateRoute: (settings) {
               switch (settings.name) {
-                case '/':
+                case '/home':
                   return MaterialPageRoute(builder: (_) => const HomeScreen());
                 case '/settings':
                   return MaterialPageRoute(builder: (_) => const SettingsScreen());
+                case '/login':
+                  return MaterialPageRoute(builder: (_) =>  LoginScreen());
                 case '/add':
                   final selectedDate = settings.arguments as DateTime?;
                   return MaterialPageRoute(

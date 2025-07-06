@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Note {
@@ -18,4 +19,15 @@ class Note {
     this.mood,
     this.drawingPaths,
   });
+  factory Note.fromFirestore(Map<String, dynamic> data, String id) {
+    return Note(
+      id: id,
+      title: data['title'],
+      content: data['content'],
+      date: (data['date'] as Timestamp).toDate(),
+      imagePath: data['imagePath'],
+      drawingPaths: List<String>.from(data['drawingPaths'] ?? []),
+      mood: data['mood'],
+    );
+  }
 }

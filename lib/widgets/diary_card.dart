@@ -9,7 +9,9 @@ import 'package:provider/provider.dart';
 
 class DiaryCard extends StatelessWidget {
   final Note note;
-  const DiaryCard({super.key, required this.note});
+  final Function refreshCallback;
+
+  const DiaryCard({super.key, required this.note, required this.refreshCallback});
 
   void _confirmDelete(BuildContext context) {
     showDialog(
@@ -26,11 +28,14 @@ class DiaryCard extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
             ),
-            onPressed: () {
-              Provider.of<NoteProvider>(context, listen: false).deleteNote(note.id);
-              Navigator.pop(context); // close dialog
+            onPressed: () async {
+              // Deleting the note using NoteProvider
+              await Provider.of<NoteProvider>(context, listen: false)
+                  .deleteNote(note.id);
+              Navigator.pop(context); // Close the delete confirmation dialog
+              refreshCallback(); // Refresh the list after deletion
             },
-            child: const Text("Delete" , style: TextStyle(color: Colors.white),),
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -68,9 +73,8 @@ class DiaryCard extends StatelessWidget {
               width: 50,
               fit: BoxFit.cover,
             )
-                : const Icon(Icons.book, size: 36)),
+                : Icon(Icons.book, size: 36, color: Theme.of(context).colorScheme.primary)),
           ),
-
           title: Text(
             note.title?.trim().isNotEmpty == true
                 ? note.title!
@@ -84,3 +88,5 @@ class DiaryCard extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -21,16 +24,54 @@ class SettingsScreen extends StatelessWidget {
     return null;
   }
 
+  Future<void> _logout(BuildContext context) async {
+    try {
+      // Firebase Sign Out
+      await FirebaseAuth.instance.signOut();
+
+      // Google Sign-Out (optional, handles if user used Google Sign-In)
+      final googleSignIn = GoogleSignIn();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
+
+      // Navigate to login screen or splash
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logout failed: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          if (user != null)
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage:
+                  user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                  child: user.photoURL == null ? const Icon(Icons.person, size: 40) : null,
+                ),
+                const SizedBox(height: 10),
+                Text(user.displayName ?? 'No name',
+                    style: Theme.of(context).textTheme.titleMedium),
+                Text(user.email ?? 'No email',
+                    style: Theme.of(context).textTheme.bodyMedium),
+                const Divider(height: 30),
+              ],
+            ),
           SwitchListTile(
             title: const Text('Dark Mode'),
             value: isDark,
@@ -69,6 +110,16 @@ class SettingsScreen extends StatelessWidget {
                 themeProvider.updatePrimaryColor(newColor);
               }
             },
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Logout'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),

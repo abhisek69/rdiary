@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "779438665851",
+    "project_id": "rdiary-55fe4",
+    "storage_bucket": "rdiary-55fe4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779438665851:android:32cbf5eb0c52b777eab2de",
+        "android_client_info": {
+          "package_name": "com.example.rdiary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779438665851-i44571iqmv4p2vb7r6p4pr39gislqkeb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rdiary",
+            "certificate_hash": "e4f65b659341eee9d9e45cb77123c4652ac9b381"
+          }
+        },
+        {
+          "client_id": "779438665851-3uhus5p6nljir2930e4ve3vtakp3qmvo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYYBfaOQPQJdiGjEXdTqwFZsDvdZKR-Do"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779438665851-3uhus5p6nljir2930e4ve3vtakp3qmvo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
