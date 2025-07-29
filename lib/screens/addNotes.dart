@@ -1,19 +1,17 @@
-// AddNoteScreen.dart (fixed and cleaned up)
+// AddNoteScreen.dart (fixed version)
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:rdiary/screens/home.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
-
 import '../models/note.dart';
 import '../models/note_provider.dart';
 import '../models/firebaseHelper.dart';
 import '../screens/drawing_screen.dart';
-import '../widgets/loading_screen.dart';
 import '../utils/loading_helper.dart';
 
 class AddNoteScreen extends StatefulWidget {
@@ -132,40 +130,12 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       });
 
       hideLoadingScreen(context);
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>const HomeScreen(),
-        ),
-      );
-
+      Get.offAllNamed('/home', arguments: _selectedDate);
     } catch (e) {
       hideLoadingScreen(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error saving note: $e")),
       );
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _selectedImage = File(picked.path);
-      });
-    }
-  }
-
-  Future<void> _openDrawingScreen() async {
-    final path = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (_) => DrawingScreen()),
-    );
-    if (path != null) {
-      setState(() {
-        _drawingPaths.add(path);
-      });
     }
   }
 
@@ -189,37 +159,21 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   Widget _buildForm(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).primaryColor, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDate(),
+            const SizedBox(height: 10),
+            _buildMoodSelector(),
+            const SizedBox(height: 20),
+            _buildTitleField(),
+            const SizedBox(height: 16),
+            _buildContentField(),
+            const SizedBox(height: 30),
+            _buildSubmitButton(),
           ],
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDate(),
-              const SizedBox(height: 10),
-              _buildMoodSelector(),
-              const SizedBox(height: 20),
-              _buildTitleField(),
-              const SizedBox(height: 16),
-              _buildContentField(),
-              const SizedBox(height: 20),
-              _buildMediaSection(),
-              const SizedBox(height: 30),
-              _buildSubmitButton(),
-            ],
-          ),
         ),
       ),
     );
@@ -302,83 +256,6 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     ],
   );
 
-  Widget _buildMediaSection() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text("Add Media", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 10),
-      Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          ElevatedButton.icon(
-            // onPressed: _pickImage,
-            onPressed: null,
-            icon: const Icon(Icons.photo),
-            label: const Text("Add Photo"),
-            style: _mediaButtonStyle(),
-          ),
-          ElevatedButton.icon(
-            onPressed: null,
-            // onPressed: _openDrawingScreen,
-            icon: const Icon(Icons.edit),
-            label: const Text("Add Drawing"),
-            style: _mediaButtonStyle(),
-          ),
-        ],
-      ),
-      const SizedBox(height: 10),
-      if (_selectedImage != null) _buildImagePreview(),
-      if (_drawingPaths.isNotEmpty) _buildDrawingPreview(),
-    ],
-  );
-
-  Widget _buildImagePreview() => Stack(
-    children: [
-      ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.file(
-          _selectedImage!,
-          height: 200,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      ),
-      Positioned(
-        right: 8,
-        top: 8,
-        child: InkWell(
-          onTap: () => setState(() => _selectedImage = null),
-          child: _closeIcon(),
-        ),
-      ),
-    ],
-  );
-
-  Widget _buildDrawingPreview() => Column(
-    children: _drawingPaths.map((path) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(File(path), height: 200, width: double.infinity, fit: BoxFit.cover),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: InkWell(
-                onTap: () => setState(() => _drawingPaths.remove(path)),
-                child: _closeIcon(),
-              ),
-            ),
-          ],
-        ),
-      );
-    }).toList(),
-  );
-
   Widget _buildSubmitButton() => ElevatedButton.icon(
     onPressed: _saveNote,
     icon: const Icon(Icons.save),
@@ -390,17 +267,5 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       backgroundColor: Theme.of(context).colorScheme.primary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-  );
-
-  ButtonStyle _mediaButtonStyle() => ElevatedButton.styleFrom(
-    backgroundColor: Theme.of(context).colorScheme.primary,
-    foregroundColor: Colors.white,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  );
-
-  Widget _closeIcon() => Container(
-    decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-    padding: const EdgeInsets.all(4),
-    child: const Icon(Icons.close, color: Colors.white, size: 20),
   );
 }

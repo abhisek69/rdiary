@@ -7,19 +7,26 @@ import 'package:rdiary/screens/addNotes.dart';
 import 'package:rdiary/screens/home.dart';
 import 'package:rdiary/screens/login_screen.dart';
 import 'package:rdiary/screens/settings.dart';
-import 'package:rdiary/utils/loading_helper.dart'; // Add loading helper imports
+import 'package:rdiary/utils/loading_helper.dart';
 import 'theme/app_theme.dart';
 import 'models/note_provider.dart';
+import 'package:get/get.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
   runApp(
-    ChangeNotifierProvider(create: (_) => NoteProvider(), child: DiaryApp()),
+    ChangeNotifierProvider(
+      create: (_) => NoteProvider(),
+      child: const DiaryApp(),
+    ),
   );
 }
 
 class DiaryApp extends StatelessWidget {
+  const DiaryApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -29,30 +36,41 @@ class DiaryApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
-          return MaterialApp(
+          return GetMaterialApp(
             title: 'My Diary',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const SplashScreen(), // Set SplashScreen as the home screen
-            onGenerateRoute: (settings) {
-              switch (settings.name) {
-                case '/home':
-                  return MaterialPageRoute(builder: (_) => const HomeScreen());
-                case '/settings':
-                  return MaterialPageRoute(builder: (_) => const SettingsScreen());
-                case '/login':
-                  return MaterialPageRoute(builder: (_) =>  LoginScreen());
-                case '/add':
-                  final selectedDate = settings.arguments as DateTime?;
-                  return MaterialPageRoute(
-                    builder: (_) => AddNoteScreen(selectedDate: selectedDate),
-                  );
-                default:
-                  return null;
-              }
-            },
+            initialRoute: '/', // ✅ Always show splash screen first
+            getPages: [
+              GetPage(
+                name: '/',
+                page: () => const SplashScreen(),
+              ),
+              GetPage(
+                name: '/home',
+                page: () {
+                  final date = Get.arguments as DateTime?;
+                  return HomeScreen(initialDate: date);
+                },
+              ),
+              GetPage(
+                name: '/settings',
+                page: () => const SettingsScreen(),
+              ),
+              GetPage(
+                name: '/login',
+                page: () => LoginScreen(),
+              ),
+              GetPage(
+                name: '/add',
+                page: () {
+                  final selectedDate = Get.arguments as DateTime?;
+                  return AddNoteScreen(selectedDate: selectedDate);
+                },
+              ),
+            ],
           );
         },
       ),

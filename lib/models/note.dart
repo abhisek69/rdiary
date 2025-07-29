@@ -9,6 +9,7 @@ class Note {
   final String? imagePath;
   final String? mood;
   final List? drawingPaths;
+  String? status;
 
   Note({
     required this.id,
@@ -18,6 +19,7 @@ class Note {
     this.imagePath,
     this.mood,
     this.drawingPaths,
+    this.status
   });
   factory Note.fromFirestore(Map<String, dynamic> data, String id) {
     return Note(

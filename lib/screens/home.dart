@@ -1,13 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import '../models/note.dart';
 import '../widgets/diary_card.dart';
 import '../widgets/diary_calendar.dart';
 
+
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final DateTime? initialDate;
+
+  const HomeScreen({super.key, this.initialDate});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,7 +27,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchNotesForDate(_selectedDay);
+    // If the initialDate is provided, use that; otherwise, default to the current date
+    final dateArg = Get.arguments as DateTime?;
+    if (dateArg != null) {
+      _selectedDay = dateArg;
+      _focusedDay = dateArg;
+    } else {
+      _selectedDay = DateTime.now();
+      _focusedDay = DateTime.now();
+    }
+    if (widget.initialDate != null) {
+      _selectedDay = widget.initialDate!;
+      _focusedDay = widget.initialDate!;
+    } else {
+      _selectedDay = DateTime.now();
+      _focusedDay = DateTime.now();
+    }
+    _fetchNotesForDate(_selectedDay);  // Fetch notes for the selected date
   }
 
   void _onDaySelected(DateTime selected, DateTime focused) {
@@ -117,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
               itemCount: _notesForSelectedDate.length,
               itemBuilder: (_, i) => DiaryCard(
                 note: _notesForSelectedDate[i],
-                refreshCallback: _fetchNotesForDate, // Callback to refresh
+                refreshCallback: _fetchNotesForDate,
               ),
             ),
           ),
@@ -129,12 +150,13 @@ class _HomeScreenState extends State<HomeScreen> {
           await Navigator.pushNamed(
             context,
             '/add',
-            arguments: _selectedDay, // Pass selected day
+            arguments: _selectedDay,  // Pass the selected date to the add screen
           );
-          _fetchNotesForDate(_selectedDay); // Refresh after return
+          _fetchNotesForDate(_selectedDay); // Refresh notes after returning
         },
         child: const Icon(Icons.add),
       ),
     );
   }
 }
+

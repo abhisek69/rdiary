@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:rdiary/utils/loading_helper.dart'; // Ensure you have loading_helper functions
 import '../../auth_service.dart';
 
@@ -27,7 +29,8 @@ class LoginScreen extends StatelessWidget {
 
             if (user != null) {
               // Navigate to the home screen if login is successful
-              Navigator.pushReplacementNamed(context, '/home');
+              Get.offAllNamed('/home');
+
             } else {
               // Handle failure to sign in (optional)
               ScaffoldMessenger.of(context).showSnackBar(

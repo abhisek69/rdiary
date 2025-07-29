@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'home.dart'; // Import HomeScreen
 
@@ -11,50 +13,78 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
   @override
   void initState() {
     super.initState();
 
     // Make the status bar transparent (optional)
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
 
-    // Delay and then navigate to HomeScreen
-    Future.delayed(const Duration(seconds: 1), () {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+
+    Future.delayed(const Duration(milliseconds: 2000), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const HomeScreen(), // Navigate to HomeScreen after splash
+          builder: (_) => const HomeScreen(),
         ),
       );
     });
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary, // Set splash background color
+      backgroundColor: Theme.of(context).colorScheme.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // You can customize the logo or animation here
-            Icon(
-              Icons.book_rounded, // Example icon for the splash screen
-              size: 100,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'My Diary',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            ScaleTransition(
+              scale: CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+              child: const Icon(
+                Icons.book_rounded,
+                size: 100,
                 color: Colors.white,
               ),
-            ),
+            ).animate().fadeIn(duration: 800.ms).slideY(begin: 1, end: 0),
+
+            const SizedBox(height: 20),
+
+            FadeTransition(
+              opacity: CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+              child: const Text(
+                'RDiary',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ).animate().fadeIn(delay: 400.ms).slideY(begin: 1, end: 0),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              'Reflect. Write. Grow.',
+              style: TextStyle(fontSize: 16, color: Colors.white70),
+            ).animate().fadeIn(delay: 800.ms),
           ],
         ),
       ),

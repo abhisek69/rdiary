@@ -13,7 +13,7 @@ class NoteProvider with ChangeNotifier {
   }
 
 
-  void updateNote(Note updatedNote) {
+   updateNote(Note updatedNote) {
     final index = _notes.indexWhere((n) => n.id == updatedNote.id);
     if (index != -1) {
       _notes[index] = updatedNote;

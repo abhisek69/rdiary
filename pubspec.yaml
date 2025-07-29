@@ -27,8 +27,10 @@ dependencies:
   cloud_firestore: ^4.13.2
   google_sign_in: ^6.2.1
   firebase_storage: ^11.7.2
+  get: ^4.6.6  # Check for latest version
+  flutter_launcher_icons: ^0.13.1
   cupertino_icons: ^1.0.8
-
+  flutter_animate: ^4.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -36,3 +38,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/app_icon.png
+flutter_icons:
+  android: true
+  image_path: "assets/icon/app_icon.png"

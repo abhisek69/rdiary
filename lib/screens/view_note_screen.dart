@@ -39,7 +39,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
 
     if (doc.exists) {
       setState(() {
-        currentNote = Note.fromFirestore(doc.data()!,doc.id);
+        currentNote = Note.fromFirestore(doc.data()!, doc.id);
       });
     }
 
@@ -49,8 +49,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('View Note'),
+        title: const Text('Your Diary Note'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -62,7 +63,6 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                   builder: (_) => AddNoteScreen(existingNote: currentNote),
                 ),
               );
-              // After editing, refresh the note data
               await _refreshNoteFromFirestore();
             },
           ),
@@ -71,50 +71,81 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (currentNote.mood != null)
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (currentNote.title != null && currentNote.title!.isNotEmpty)
+                Text(
+                  currentNote.title!,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              const SizedBox(height: 10),
+
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Mood: ",
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(currentNote.mood!,
-                      style: const TextStyle(fontSize: 16)),
+                  Text(
+                    DateFormat.yMMMMd().format(currentNote.date),
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  if (currentNote.mood != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        currentNote.mood!,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+                      ),
+                    ),
                 ],
               ),
-            const SizedBox(height: 6),
-            Text(
-              DateFormat.yMMMMd().format(currentNote.date),
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            if (currentNote.title != null)
-              Text(currentNote.title!,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text(
-              currentNote.content,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            if (currentNote.imagePath != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  File(currentNote.imagePath!),
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+
+              const Divider(height: 30, thickness: 1),
+              Text(
+                currentNote.content,
+                style: const TextStyle(fontSize: 16, height: 1.5),
               ),
-            const SizedBox(height: 20),
-            if (currentNote.drawingPaths!.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: currentNote.drawingPaths!.map((path) {
+
+
+              const SizedBox(height: 20),
+
+              if (currentNote.imagePath != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.file(
+                    File(currentNote.imagePath!),
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+              if (currentNote.drawingPaths!.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                const Text("Drawings:",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white70)),
+                const SizedBox(height: 10),
+                ...currentNote.drawingPaths!.map((path) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: ClipRRect(
@@ -127,8 +158,9 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                     ),
                   );
                 }).toList(),
-              ),
-          ],
+              ]
+            ],
+          ),
         ),
       ),
     );
