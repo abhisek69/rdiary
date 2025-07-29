@@ -11,15 +11,13 @@ class SettingsScreen extends StatelessWidget {
   // Reverse-lookup the shade of a selected color from Material swatches
   int? getMaterialShade(Color color) {
     for (final swatch in Colors.primaries) {
-      if (swatch is MaterialColor) {
-        for (final shade in [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]) {
-          final c = swatch[shade];
-          if (c?.value == color.value) {
-            return shade;
-          }
+      for (final shade in [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]) {
+        final c = swatch[shade];
+        if (c?.value == color.value) {
+          return shade;
         }
       }
-    }
+        }
     return null;
   }
 

@@ -76,11 +76,11 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                 color: Colors.black12,
                 blurRadius: 10,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -157,7 +157,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ]
             ],
           ),

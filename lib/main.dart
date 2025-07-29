@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +6,6 @@ import 'package:rdiary/screens/addNotes.dart';
 import 'package:rdiary/screens/home.dart';
 import 'package:rdiary/screens/login_screen.dart';
 import 'package:rdiary/screens/settings.dart';
-import 'package:rdiary/utils/loading_helper.dart';
 import 'theme/app_theme.dart';
 import 'models/note_provider.dart';
 import 'package:get/get.dart';

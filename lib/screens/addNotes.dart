@@ -4,14 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import '../models/note.dart';
 import '../models/note_provider.dart';
 import '../models/firebaseHelper.dart';
-import '../screens/drawing_screen.dart';
 import '../utils/loading_helper.dart';
 
 class AddNoteScreen extends StatefulWidget {

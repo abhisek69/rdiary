@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/loading_screen.dart'; // Adjust path accordingly
+// Adjust path accordingly
 
 void showLoadingScreen(BuildContext context, {String message = 'Please wait...'}) {
   showDialog(
@@ -15,7 +15,7 @@ void showLoadingScreen(BuildContext context, {String message = 'Please wait...'}
           children: [
              CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 20),
-            Text(message, style: (TextStyle(color: Colors.black)),),
+            Text(message, style: (const TextStyle(color: Colors.black)),),
           ],
         ),
       );

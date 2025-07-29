@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import '../models/note.dart';
 import '../widgets/diary_card.dart';
 import '../widgets/diary_calendar.dart';
@@ -129,11 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _notesForSelectedDate.isEmpty
-                ? Center(
+                ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'No entries for this date yet.',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),

@@ -59,7 +59,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       if (renderBox == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to get canvas size')));
+        ).showSnackBar(const SnackBar(content: Text('Failed to get canvas size')));
         return;
       }
 
@@ -72,7 +72,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
       final dir = await getApplicationDocumentsDirectory();
-      final file = File("${dir.path}/draw_${Uuid().v4()}.png");
+      final file = File("${dir.path}/draw_${const Uuid().v4()}.png");
       await file.writeAsBytes(pngBytes);
 
       Navigator.pop(context, file.path);
