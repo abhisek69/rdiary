@@ -1,10 +1,9 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'dart:async';
+import 'package:get/get.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import 'home.dart'; // Import HomeScreen
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,23 +20,25 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Make the status bar transparent (optional)
+    // Transparent status bar
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1000),
     )..forward();
 
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        ),
-      );
+    // Navigate after delay based on login state
+    Future.delayed(const Duration(seconds: 2), () {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        Get.offAllNamed('/login'); // 🔁 go to login
+      } else {
+        Get.offAllNamed('/home'); // ✅ go to home
+      }
     });
   }
 
@@ -57,11 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             ScaleTransition(
               scale: CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-              child: const Icon(
-                Icons.book_rounded,
-                size: 100,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.book_rounded, size: 100, color: Colors.white),
             ).animate().fadeIn(duration: 800.ms).slideY(begin: 1, end: 0),
 
             const SizedBox(height: 20),
@@ -69,13 +66,8 @@ class _SplashScreenState extends State<SplashScreen>
             FadeTransition(
               opacity: CurvedAnimation(parent: _controller, curve: Curves.easeIn),
               child: const Text(
-                'RDiary',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
+                'My Diary',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ).animate().fadeIn(delay: 400.ms).slideY(begin: 1, end: 0),
 

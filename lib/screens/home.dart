@@ -27,6 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // User is not logged in — redirect
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.offAllNamed('/login');
+      });
+    }
     // If the initialDate is provided, use that; otherwise, default to the current date
     final dateArg = Get.arguments as DateTime?;
     if (dateArg != null) {

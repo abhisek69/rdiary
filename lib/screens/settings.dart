@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -29,20 +28,24 @@ class SettingsScreen extends StatelessWidget {
       // Firebase Sign Out
       await FirebaseAuth.instance.signOut();
 
-      // Google Sign-Out (optional, handles if user used Google Sign-In)
+      // Google Sign-Out (optional)
       final googleSignIn = GoogleSignIn();
       if (await googleSignIn.isSignedIn()) {
         await googleSignIn.signOut();
       }
 
-      // Navigate to login screen or splash
-      Navigator.of(context).pushReplacementNamed('/login');
+      // Clear entire navigation stack and go to login screen
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/login',
+            (Route<dynamic> route) => false, // removes all previous routes
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Logout failed: $e')),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
