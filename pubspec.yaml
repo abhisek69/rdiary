@@ -20,7 +20,9 @@ dependencies:
   path_provider: ^2.1.2
   flutter_colorpicker: ^1.0.3
   table_calendar: ^3.0.9
-
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+  permission_handler: ^11.3.0
   # ✅ Firebase packages compatible with Kotlin 1.8.22
   firebase_core: ^2.25.4
   firebase_auth: ^4.15.3

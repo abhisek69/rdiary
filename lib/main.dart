@@ -6,21 +6,31 @@ import 'package:rdiary/screens/addNotes.dart';
 import 'package:rdiary/screens/home.dart';
 import 'package:rdiary/screens/login_screen.dart';
 import 'package:rdiary/screens/settings.dart';
+import 'package:rdiary/services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'models/note_provider.dart';
 import 'package:get/get.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await NotificationService.init();
+  await NotificationService.requestPermission(); // ✅ Proper permission check
+  // await NotificationService.showTestNotification();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => NoteProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => NoteProvider()),
+      ],
       child: const DiaryApp(),
     ),
   );
 }
+
+
 
 class DiaryApp extends StatelessWidget {
   const DiaryApp({super.key});

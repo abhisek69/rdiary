@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/note.dart';
+import '../services/notification_service.dart';
 import '../widgets/diary_card.dart';
 import '../widgets/diary_calendar.dart';
 
@@ -51,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     _fetchNotesForDate(_selectedDay);  // Fetch notes for the selected date
   }
-
   void _onDaySelected(DateTime selected, DateTime focused) {
     setState(() {
       _selectedDay = selected;
@@ -69,33 +69,53 @@ class _HomeScreenState extends State<HomeScreen> {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day + 1);
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('notes')
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThan: Timestamp.fromDate(endOfDay))
-        .orderBy('date', descending: true)
-        .get();
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('notes')
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+          .orderBy('date', descending: true)
+          .get();
 
-    final notes = snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Note(
-        id: data['id'],
-        title: data['title'],
-        content: data['content'],
-        date: (data['date'] as Timestamp).toDate(),
-        imagePath: data['imagePath'],
-        drawingPaths: List<String>.from(data['drawingPaths'] ?? []),
-        mood: data['mood'],
-      );
-    }).toList();
+      final fetchedNotes = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Note(
+          id: data['id'],
+          title: data['title'],
+          content: data['content'],
+          date: (data['date'] as Timestamp).toDate(),
+          imagePath: data['imagePath'],
+          drawingPaths: List<String>.from(data['drawingPaths'] ?? []),
+          mood: data['mood'],
+        );
+      }).toList();
 
-    setState(() {
-      _notesForSelectedDate = notes;
-      _isLoading = false;
-    });
+      setState(() {
+        _notesForSelectedDate = fetchedNotes;
+        _isLoading = false;
+      });
+
+      // 🔔 Notification logic
+      final now = DateTime.now();
+      final isToday = now.year == date.year &&
+          now.month == date.month &&
+          now.day == date.day;
+
+      if (isToday) {
+        if (fetchedNotes.isEmpty) {
+          await NotificationService.scheduleReminderNotification();
+        } else {
+          await NotificationService.cancelAll();
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print("Error fetching notes: $e");
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
