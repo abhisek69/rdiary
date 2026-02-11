@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:rdiary/screens/addNotes.dart';
+import 'package:rdiary/screens/addSubject/addSubject.dart';
 import '../models/note.dart';
 
 class ViewNoteScreen extends StatefulWidget {
@@ -60,7 +60,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => AddNoteScreen(existingNote: currentNote),
+                  builder: (_) => const AddSubjectScreen(),
                 ),
               );
               await _refreshNoteFromFirestore();

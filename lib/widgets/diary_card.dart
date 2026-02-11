@@ -54,7 +54,7 @@ class DiaryCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              note.status = "Failed";
+              final updatedNote = note.copyWith(status: "Failed");
               await Provider.of<NoteProvider>(context, listen: false)
                   .updateNote(note);
               Get.back();
@@ -64,7 +64,7 @@ class DiaryCard extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              note.status = "Completed";
+              final updatedNote = note.copyWith(status: "Failed");
               await Provider.of<NoteProvider>(context, listen: false)
                   .updateNote(note);
               Get.back();

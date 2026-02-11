@@ -7,26 +7,36 @@ import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
-  static Future<void> showTestNotification() async {
-    await _notificationsPlugin.show(
-      999, // Unique ID
-      'Test Notification',
-      'This is a test notification triggered on app start.',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          color: Colors.orange,
-          'test_channel',
-          'Test Notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-    );
-  }
+      FlutterLocalNotificationsPlugin();
+  // static Future<void> showTestNotification() async {
+  //   await _notificationsPlugin.show(
+  //     999, // Unique ID
+  //     'Test Notification',
+  //     'This is a test notification triggered on app start.',
+  //     const NotificationDetails(
+  //       android: AndroidNotificationDetails(
+  //         'test_channel', // Channel ID
+  //         'Test Notifications', // Channel name
+  //         channelDescription: 'Channel for test notifications',
+  //         importance: Importance.max,
+  //         priority: Priority.high,
+  //         color: Color(0xFF4B0082), // Indigo/dark purple
+  //         styleInformation: BigTextStyleInformation(
+  //           'This is a test notification triggered on app start.',
+  //         ),
+  //         enableLights: true,
+  //         ledColor: Color(0xFF4B0082), // Optional: LED light
+  //         ledOnMs: 1000,
+  //         ledOffMs: 500,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   static Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const initSettings = InitializationSettings(android: androidSettings);
     await _notificationsPlugin.initialize(initSettings);
     tz.initializeTimeZones();
@@ -44,9 +54,10 @@ class NotificationService {
   static Future<void> scheduleReminderNotification() async {
     await _notificationsPlugin.zonedSchedule(
       0,
-      'Daily Diary Reminder',
+      'Daily your diary Reminder',
       'Don\'t forget to write your diary entry today!',
-      _nextInstanceOf8PM(),
+      // _nextInstanceOf8PM(),
+      _nextInstanceInOneMinute(),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_reminder_channel',
@@ -57,12 +68,18 @@ class NotificationService {
       ),
       androidAllowWhileIdle: true,
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
+
   static Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  static tz.TZDateTime _nextInstanceInOneMinute() {
+    final now = tz.TZDateTime.now(tz.local);
+    return now.add(const Duration(minutes: 1));
   }
 
   static tz.TZDateTime _nextInstanceOf8PM() {
