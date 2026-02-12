@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rdiary/screens/addSubject/scribble_canvas_widget.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
@@ -21,8 +22,7 @@ class _AddNoteFormState extends State<AddNoteForm> {
 
   DateTime _selectedDate = DateTime.now();
   String? _selectedMood;
-  File? _selectedImage;
-  List<String> _drawingPaths = [];
+  Map<String, dynamic>? _drawingData;
 
   final List<Map<String, String>> moods = [
     {'label': '😊', 'value': 'Happy'},
@@ -41,11 +41,12 @@ class _AddNoteFormState extends State<AddNoteForm> {
 
   Future<void> _saveNote() async {
     if (_contentController.text.trim().isEmpty &&
-        _drawingPaths.isEmpty) {
+        _drawingData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Note can't be empty!"),
-          backgroundColor: Colors.red.shade900,
+          backgroundColor:
+          Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -75,18 +76,20 @@ class _AddNoteFormState extends State<AddNoteForm> {
           ),
         ),
         'mood': _selectedMood,
-        'imagePath': null,
-        'drawingPaths': _drawingPaths,
+        'drawingData': _drawingData,
         'createdAt': Timestamp.now(),
       });
 
       Get.back();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving note: $e")),
+        SnackBar(
+          content: Text("Error saving note: $e"),
+        ),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,8 +180,13 @@ class _AddNoteFormState extends State<AddNoteForm> {
           ),
 
           const SizedBox(height: 20),
-
-          // 📝 Title
+          // ScribbleCanvasWidget(
+          //   initialDrawing: null,
+          //   onChanged: (data) {
+          //     _drawingData = data;
+          //   },
+          // ),
+          const SizedBox(height: 20),
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(

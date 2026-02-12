@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdiary/screens/SplashScreen.dart';
 import 'package:rdiary/screens/addSubject/addSubject.dart';
-import 'package:rdiary/screens/home.dart';
+import 'package:rdiary/screens/home/home.dart';
 import 'package:rdiary/screens/login_screen.dart';
 import 'package:rdiary/screens/settings.dart';
 import 'package:rdiary/services/notification_service.dart';
