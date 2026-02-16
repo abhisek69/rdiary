@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/note.dart';
 import '../../models/goal.dart';
 
+import '../../utils/pulseLoader.dart';
 import 'calendar_section.dart';
 import 'goals_section.dart';
 import 'notes_section.dart';
@@ -64,48 +64,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       // 📝 NOTES
-      final notesSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('notes')
-          .where('date',
-          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('date',
-          isLessThan: Timestamp.fromDate(endOfDay))
-          .get();
+      final notesSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('notes')
+              .where(
+                'date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+              )
+              .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+              .get();
 
-      final notes = notesSnapshot.docs
-          .map((doc) => Note.fromFirestore(doc.data(), doc.id))
-          .toList();
+      final notes =
+          notesSnapshot.docs
+              .map((doc) => Note.fromFirestore(doc.data(), doc.id))
+              .toList();
 
       // 🎯 GOALS
-      final goalsSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('goals')
-          .get();
+      final goalsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('goals')
+              .get();
 
-      final weekday = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-      [date.weekday - 1];
+      final weekday =
+          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][date.weekday - 1];
 
-      final goals = goalsSnapshot.docs
-          .map((doc) => Goal.fromFirestore(doc.data(), doc.id))
-          .where((goal) {
-        if (!goal.goalDays.contains(weekday)) return false;
+      final goals =
+          goalsSnapshot.docs
+              .map((doc) => Goal.fromFirestore(doc.data(), doc.id))
+              .where((goal) {
+                if (!goal.goalDays.contains(weekday)) return false;
 
-        if (goal.deadline != null && date.isAfter(goal.deadline!)) {
-          return false;
-        }
+                if (goal.deadline != null && date.isAfter(goal.deadline!)) {
+                  return false;
+                }
 
-        return true;
-      }).toList();
+                return true;
+              })
+              .toList();
 
       setState(() {
         _notesForSelectedDate = notes;
         _goalsForSelectedDate = goals;
         _isLoading = false;
       });
-
     } catch (e) {
       setState(() => _isLoading = false);
       print("Error: $e");
@@ -115,20 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Icon(Icons.draw),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () =>
-                Navigator.pushNamed(context, '/settings'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text("Rocky's Diary"), actions: []),
 
       body: Column(
         children: [
-
           /// 📅 CALENDAR
           CalendarSection(
             selectedDay: _selectedDay,
@@ -138,59 +133,61 @@ class _HomeScreenState extends State<HomeScreen> {
 
           /// 📦 CONTENT
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child:
+                _isLoading
+                    ? Center(
+                      child: AppLoader(
+                        loadingColor: Theme.of(context).colorScheme.primary,
+                        type: LoaderType.halfTriangleDot,
+                        size: 120,
+                      ),
+                    )
+                    : SingleChildScrollView(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// 🎯 GOALS
+                          GoalsSection(
+                            goals: _goalsForSelectedDate,
+                            selectedDay: _selectedDay,
+                            refreshCallback:
+                                () => _fetchNotesForDate(_selectedDay),
+                          ),
 
-                  /// 🎯 GOALS
-                  GoalsSection(
-                    goals: _goalsForSelectedDate,
-                    selectedDay: _selectedDay,
-                    refreshCallback: () =>
-                        _fetchNotesForDate(_selectedDay),
-                  ),
+                          /// 📝 NOTES
+                          NotesSection(
+                            notes: _notesForSelectedDate,
+                            selectedDay: _selectedDay,
+                            refreshCallback: _fetchNotesForDate,
+                          ),
 
-                  /// 📝 NOTES
-                  NotesSection(
-                    notes: _notesForSelectedDate,
-                    selectedDay: _selectedDay,
-                    refreshCallback: _fetchNotesForDate,
-                  ),
-
-                  if (_notesForSelectedDate.isEmpty &&
-                      _goalsForSelectedDate.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 60),
-                        child: Text(
-                          'No entries for this date yet.',
-                          style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey),
-                        ),
+                          if (_notesForSelectedDate.isEmpty &&
+                              _goalsForSelectedDate.isEmpty)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 60),
+                                child: Text(
+                                  'No entries for this date yet.',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
 
       /// ➕ ADD BUTTON (YOU WERE MISSING THIS)
       floatingActionButton: FloatingActionButton(
-        backgroundColor:
-        Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () async {
-          await Navigator.pushNamed(
-            context,
-            '/add',
-            arguments: _selectedDay,
-          );
+          await Navigator.pushNamed(context, '/add', arguments: _selectedDay);
 
           _fetchNotesForDate(_selectedDay);
         },
