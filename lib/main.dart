@@ -4,12 +4,16 @@ import 'package:provider/provider.dart';
 import 'package:rdiary/screens/SplashScreen.dart';
 import 'package:rdiary/screens/addSubject/addSubject.dart';
 import 'package:rdiary/screens/home/home.dart';
+import 'package:rdiary/screens/home/main_screen.dart';
 import 'package:rdiary/screens/login_screen.dart';
-import 'package:rdiary/screens/settings.dart';
+import 'package:rdiary/screens/settings/create_pin_screen.dart';
+import 'package:rdiary/screens/settings/settings.dart';
 import 'package:rdiary/services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'models/note_provider.dart';
 import 'package:get/get.dart';
+import 'package:rdiary/services/app_lock_service.dart';
+import 'package:rdiary/screens/lock_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,15 +54,17 @@ class DiaryApp extends StatelessWidget {
             initialRoute: '/', // ✅ Always show splash screen first
             getPages: [
               GetPage(name: '/', page: () => const SplashScreen()),
+              GetPage(name: '/lock', page: () => const LockScreen()),
               GetPage(
                 name: '/home',
                 page: () {
                   final date = Get.arguments as DateTime?;
-                  return HomeScreen(initialDate: date);
+                  return MainScreen(initialDate: date);
                 },
               ),
               GetPage(name: '/settings', page: () => const SettingsScreen()),
               GetPage(name: '/login', page: () => LoginScreen()),
+              GetPage(name: '/create-pin', page: () => const CreatePinScreen()),
               GetPage(
                 name: '/add',
                 page: () {

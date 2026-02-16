@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:rdiary/services/app_lock_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
+    _handleNavigation();
     // Transparent status bar
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -41,7 +42,25 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
   }
+  Future<void> _handleNavigation() async {
+    await Future.delayed(const Duration(seconds: 2));
 
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      Get.offAllNamed('/login');
+      return;
+    }
+
+    final lockService = AppLockService();
+    final isLockEnabled = await lockService.isLockEnabled();
+
+    if (isLockEnabled) {
+      Get.offAllNamed('/lock');
+    } else {
+      Get.offAllNamed('/home');
+    }
+  }
   @override
   void dispose() {
     _controller.dispose();
