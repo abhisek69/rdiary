@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_scaffold.dart';
 import 'home.dart';
 import '../settings/settings.dart';
 import '../goals_screen.dart';
-
+import 'notes_screen.dart';
 class MainScreen extends StatefulWidget {
   final DateTime? initialDate;
 
@@ -17,9 +18,11 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
+    NotesScreen(),
     GoalsScreen(),
     SettingsScreen(),
   ];
+
 
   @override
   void initState() {
@@ -38,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return AppScaffold(
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -74,13 +77,17 @@ class _MainScreenState extends State<MainScreen> {
             );
           },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: colors.surface,
-          selectedItemColor: colors.primary,
-          unselectedItemColor: colors.onSurface.withOpacity(0.6),
+          backgroundColor: colors.primary,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white70,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home_rounded),
               label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book_rounded),
+              label: "Notes",
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart_rounded),
@@ -91,7 +98,7 @@ class _MainScreenState extends State<MainScreen> {
               label: "Settings",
             ),
           ],
-        ),
+        )
       ),
     );
   }
