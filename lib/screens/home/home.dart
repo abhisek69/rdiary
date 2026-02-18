@@ -82,29 +82,62 @@ class _HomeScreenState extends State<HomeScreen> {
               .toList();
 
       // 🎯 GOALS
+      // 🎯 GOALS
       final goalsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('goals')
-              .get();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('goals')
+          .get();
+
+// Normalize selected date
+      DateTime selected =
+      DateTime(date.year, date.month, date.day);
 
       final weekday =
-          ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][date.weekday - 1];
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      [selected.weekday - 1];
 
-      final goals =
-          goalsSnapshot.docs
-              .map((doc) => Goal.fromFirestore(doc.data(), doc.id))
-              .where((goal) {
-                if (!goal.goalDays.contains(weekday)) return false;
+      final goals = goalsSnapshot.docs
+          .map((doc) => Goal.fromFirestore(doc.data(), doc.id))
+          .where((goal) {
 
-                if (goal.deadline != null && date.isAfter(goal.deadline!)) {
-                  return false;
-                }
+        // Must be scheduled on that weekday
+        if (!goal.goalDays.contains(weekday)) {
+          return false;
+        }
 
-                return true;
-              })
-              .toList();
+        // Normalize start date
+        if (goal.startDate != null) {
+          final start = DateTime(
+            goal.startDate!.year,
+            goal.startDate!.month,
+            goal.startDate!.day,
+          );
+
+          if (selected.isBefore(start)) {
+            return false;
+          }
+        }
+
+        // Normalize deadline
+        if (goal.deadline != null) {
+          final end = DateTime(
+            goal.deadline!.year,
+            goal.deadline!.month,
+            goal.deadline!.day,
+          );
+
+          // IMPORTANT: show ON end date, hide only AFTER
+          if (selected.isAfter(end)) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+          .toList();
+
 
       setState(() {
         _notesForSelectedDate = notes;

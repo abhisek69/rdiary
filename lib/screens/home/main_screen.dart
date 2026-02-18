@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import '../settings/settings.dart';
-import '../goals_screen.dart';
+import '../goals/goals_screen.dart';
 import 'notes_screen.dart';
 class MainScreen extends StatefulWidget {
   final DateTime? initialDate;

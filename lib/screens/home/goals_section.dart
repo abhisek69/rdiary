@@ -17,11 +17,13 @@ class GoalsSection extends StatelessWidget {
     required this.refreshCallback,
   });
 
+  /// Normalize date (removes time completely)
+  DateTime _normalize(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
   /// DELETE GOAL
-  Future<void> _deleteGoal(
-      BuildContext context,
-      Goal goal,
-      ) async {
+  Future<void> _deleteGoal(BuildContext context, Goal goal) async {
     final theme = Theme.of(context);
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -36,12 +38,10 @@ class GoalsSection extends StatelessWidget {
           ),
           title: Text(
             "Delete Goal?",
-            style: TextStyle(
-              color: theme.colorScheme.onSurface,
-            ),
+            style: TextStyle(color: theme.colorScheme.onSurface),
           ),
           content: Text(
-            "Are you sure you want to delete this goal?\nThis action cannot be undone.",
+            "Are you sure you want to delete this goal?",
             style: TextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
@@ -50,23 +50,17 @@ class GoalsSection extends StatelessWidget {
             TextButton(
               child: Text(
                 "Cancel",
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary),
               ),
-              onPressed: () =>
-                  Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(context, false),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                theme.colorScheme.primary,
-                foregroundColor:
-                theme.colorScheme.onPrimary,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white, // 👈 THIS FIXES IT
               ),
               child: const Text("Delete"),
-              onPressed: () =>
-                  Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(context, true),
             ),
           ],
         );
@@ -76,7 +70,7 @@ class GoalsSection extends StatelessWidget {
     if (confirm == true) {
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(user.uid)
+          .doc(user!.uid)
           .collection('goals')
           .doc(goal.id)
           .delete();
@@ -85,20 +79,16 @@ class GoalsSection extends StatelessWidget {
     }
   }
 
-  Widget _buildGoalCard(
-      BuildContext context,
-      Goal goal,
-      ) {
+  Widget _buildGoalCard(BuildContext context, Goal goal) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final surface = theme.colorScheme.surface;
     final onSurface = theme.colorScheme.onSurface;
 
-    final dateKey =
-    DateFormat('yyyy-MM-dd').format(selectedDay);
+    final selected = _normalize(selectedDay);
+    final dateKey = DateFormat('yyyy-MM-dd').format(selected);
 
-    final isCompleted =
-    goal.completedDates.contains(dateKey);
+    final isCompleted = goal.completedDates.contains(dateKey);
 
     return GestureDetector(
       onLongPress: () {
@@ -111,44 +101,37 @@ class GoalsSection extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color:
-            primary.withOpacity(isCompleted ? 0.4 : 0.8),
+            color: primary.withOpacity(isCompleted ? 0.4 : 0.8),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: primary
-                  .withOpacity(isCompleted ? 0.15 : 0.3),
+              color: primary.withOpacity(isCompleted ? 0.15 : 0.3),
               blurRadius: 12,
             ),
           ],
-          color: surface, // 🔥 theme adaptive
+          color: surface,
         ),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-
-              /// Checkbox
               Transform.scale(
                 scale: 1.1,
                 child: Checkbox(
                   value: isCompleted,
                   activeColor: primary,
-                  side: BorderSide(
-                    color: primary,
-                    width: 1.5,
-                  ),
+                  side: BorderSide(color: primary, width: 1.5),
                   onChanged: (val) async {
-                    final user =
-                        FirebaseAuth.instance.currentUser;
+                    final user = FirebaseAuth.instance.currentUser;
 
                     final updatedDates =
-                    List<String>.from(
-                        goal.completedDates);
+                    List<String>.from(goal.completedDates);
 
                     if (val == true) {
-                      updatedDates.add(dateKey);
+                      if (!updatedDates.contains(dateKey)) {
+                        updatedDates.add(dateKey);
+                      }
                     } else {
                       updatedDates.remove(dateKey);
                     }
@@ -158,22 +141,16 @@ class GoalsSection extends StatelessWidget {
                         .doc(user!.uid)
                         .collection('goals')
                         .doc(goal.id)
-                        .update({
-                      'completedDates': updatedDates,
-                    });
+                        .update({'completedDates': updatedDates});
 
                     refreshCallback();
                   },
                 ),
               ),
-
               const SizedBox(width: 16),
-
-              /// Goal Text
               Expanded(
                 child: AnimatedDefaultTextStyle(
-                  duration:
-                  const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -198,34 +175,54 @@ class GoalsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (goals.isEmpty) return const SizedBox();
 
+    final selected = _normalize(selectedDay);
+
+    final visibleGoals = goals.where((goal) {
+
+      if (goal.startDate == null) return true;
+
+      final start = _normalize(goal.startDate!);
+
+      // Hide before start date
+      if (selected.isBefore(start)) {
+        return false;
+      }
+
+      if (goal.deadline != null) {
+        final end = _normalize(goal.deadline!);
+
+        // Show ON end date, hide only AFTER
+        if (selected.isAfter(end)) {
+          return false;
+        }
+      }
+
+      return true;
+
+    }).toList();
+
+    if (visibleGoals.isEmpty) return const SizedBox();
+
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Goals",
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color:
-            Theme.of(context).colorScheme.onBackground,
+            color: Theme.of(context).colorScheme.onBackground,
           ),
         ),
         const SizedBox(height: 12),
-
         ListView.builder(
           shrinkWrap: true,
-          physics:
-          const NeverScrollableScrollPhysics(),
-          itemCount: goals.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: visibleGoals.length,
           itemBuilder: (_, i) {
-            return _buildGoalCard(
-              context,
-              goals[i],
-            );
+            return _buildGoalCard(context, visibleGoals[i]);
           },
         ),
-
         const SizedBox(height: 20),
       ],
     );

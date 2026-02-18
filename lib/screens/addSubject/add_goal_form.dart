@@ -16,11 +16,12 @@ class _AddGoalFormState extends State<AddGoalForm> {
   final _goalController = TextEditingController();
 
   final List<String> _weekDays = [
-    "Mon","Tue","Wed","Thu","Fri","Sat","Sun"
+    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
   ];
 
   List<String> _selectedDays = [];
   DateTime? _deadline;
+  DateTime _startDate = DateTime.now();
 
   Future<void> _saveGoal() async {
     final goalName = _goalController.text.trim();
@@ -49,6 +50,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
           .set({
         'title': goalName,
         'goalDays': _selectedDays,
+        'startDate': Timestamp.fromDate(_startDate),
         'deadline': _deadline != null
             ? Timestamp.fromDate(_deadline!)
             : null,
@@ -64,7 +66,10 @@ class _AddGoalFormState extends State<AddGoalForm> {
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor:
-          Theme.of(context).colorScheme.primary,
+          Theme
+              .of(context)
+              .colorScheme
+              .primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -76,7 +81,6 @@ class _AddGoalFormState extends State<AddGoalForm> {
 
       await Future.delayed(const Duration(milliseconds: 800));
       Get.back();
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -89,6 +93,13 @@ class _AddGoalFormState extends State<AddGoalForm> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme
+        .of(context)
+        .colorScheme;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -98,30 +109,57 @@ class _AddGoalFormState extends State<AddGoalForm> {
           const Text(
             "Set Your Goal",
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 🏷 Goal Title
-          TextField(
-            controller: _goalController,
-            decoration: const InputDecoration(
-              labelText: "Goal (e.g., Go to Gym)",
-              border: OutlineInputBorder(),
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // 📅 Repeat Days
+          /// 🏷 Goal Title
+          TextField(
+            controller: _goalController,
+            decoration: InputDecoration(
+              labelText: "Goal (e.g., Go to Gym)",
+              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: colors.surface,
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          /// 🗓 Start Date
+          _dateTile(
+            context,
+            label: "Start",
+            value: DateFormat.yMMMd().format(_startDate),
+            icon: Icons.play_arrow_rounded,
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _startDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+
+              if (picked != null) {
+                setState(() => _startDate = picked);
+              }
+            },
+          ),
+
+          const SizedBox(height: 30),
+
+          /// 📅 Repeat Days
           const Text(
             "Repeat on Days",
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600),
+                fontSize: 16,
+                fontWeight: FontWeight.w600),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           Wrap(
             spacing: 10,
@@ -131,21 +169,18 @@ class _AddGoalFormState extends State<AddGoalForm> {
               _selectedDays.contains(day);
 
               return ChoiceChip(
-                label: Text(
-                  day,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.grey[300],
-                  ),
-                ),
+                label: Text(day),
                 selected: isSelected,
-                selectedColor:
-                Theme.of(context).colorScheme.primary,
-                backgroundColor: Colors.grey[850],
+                selectedColor: colors.primary,
+                backgroundColor: colors.surface,
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : colors.onSurface,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                  BorderRadius.circular(10),
+                  BorderRadius.circular(12),
                 ),
                 onSelected: (val) {
                   setState(() {
@@ -160,16 +195,24 @@ class _AddGoalFormState extends State<AddGoalForm> {
             }).toList(),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 30),
 
-          // 🗓 Deadline
-          GestureDetector(
+          /// 🗓 Deadline
+          _dateTile(
+            context,
+            label: "Deadline",
+            value: _deadline == null
+                ? "Select Deadline"
+                : DateFormat.yMMMd()
+                .format(_deadline!),
+            icon: Icons.calendar_today_outlined,
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
                 initialDate:
-                _deadline ?? DateTime.now(),
-                firstDate: DateTime.now(),
+                _deadline ?? _startDate,
+                firstDate:
+                _startDate, // important fix
                 lastDate: DateTime(2100),
               );
 
@@ -177,39 +220,11 @@ class _AddGoalFormState extends State<AddGoalForm> {
                 setState(() => _deadline = picked);
               }
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 18),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade900,
-                borderRadius:
-                BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _deadline == null
-                        ? "Select Deadline"
-                        : "Deadline: ${DateFormat.yMMMd().format(_deadline!)}",
-                    style:
-                    const TextStyle(fontSize: 16),
-                  ),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary,
-                  ),
-                ],
-              ),
-            ),
           ),
 
           const SizedBox(height: 40),
 
-          // 💾 Save Button
+          /// 💾 Save Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -226,13 +241,10 @@ class _AddGoalFormState extends State<AddGoalForm> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                Theme.of(context)
-                    .colorScheme
-                    .primary,
+                backgroundColor: colors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                  BorderRadius.circular(12),
+                  BorderRadius.circular(14),
                 ),
               ),
             ),
@@ -241,4 +253,61 @@ class _AddGoalFormState extends State<AddGoalForm> {
       ),
     );
   }
+  Widget _dateTile(
+      BuildContext context, {
+        required String label,
+        required String value,
+        required IconData icon,
+        required VoidCallback onTap,
+      }) {
+    final colors = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius:
+          BorderRadius.circular(16),
+          border: Border.all(
+            color: colors.primary.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment:
+          MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.onSurface
+                        .withOpacity(0.6),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight:
+                    FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            Icon(icon,
+                color: colors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
