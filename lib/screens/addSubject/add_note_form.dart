@@ -7,6 +7,8 @@ import 'package:rdiary/screens/addSubject/scribble_canvas_widget.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
+import '../../widgets/mood_selector.dart';
+
 class AddNoteForm extends StatefulWidget {
   final DateTime? selectedDate;
 
@@ -24,14 +26,6 @@ class _AddNoteFormState extends State<AddNoteForm> {
   String? _selectedMood;
   Map<String, dynamic>? _drawingData;
 
-  final List<Map<String, String>> moods = [
-    {'label': '😊', 'value': 'Happy'},
-    {'label': '😭', 'value': 'Sad'},
-    {'label': '😡', 'value': 'Angry'},
-    {'label': '🥱', 'value': 'Tired'},
-    {'label': '🤩', 'value': 'Excited'},
-    {'label': '😐', 'value': 'Neutral'},
-  ];
 
   @override
   void initState() {
@@ -75,7 +69,7 @@ class _AddNoteFormState extends State<AddNoteForm> {
             _selectedDate.day,
           ),
         ),
-        'mood': _selectedMood,
+        'mood': _selectedMood ?? "neutral",
         'drawingData': _drawingData,
         'createdAt': Timestamp.now(),
       });
@@ -122,61 +116,13 @@ class _AddNoteFormState extends State<AddNoteForm> {
           ),
           const SizedBox(height: 12),
 
-          SizedBox(
-            height: 84,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: moods.length,
-              separatorBuilder: (_, __) =>
-              const SizedBox(width: 12),
-              itemBuilder: (_, i) {
-                final mood = moods[i];
-                final isSelected =
-                    _selectedMood == mood['value'];
-
-                return GestureDetector(
-                  onTap: () => setState(
-                          () => _selectedMood =
-                      mood['value']),
-                  child: Column(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(
-                            milliseconds: 200),
-                        padding:
-                        const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Theme.of(context)
-                              .colorScheme
-                              .primary
-                              : Colors.grey[800],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          mood['label']!,
-                          style: const TextStyle(
-                              fontSize: 24),
-                        ),
-                      ),
-                      if (isSelected)
-                        Padding(
-                          padding:
-                          const EdgeInsets.only(
-                              top: 4),
-                          child: Text(
-                            mood['value']!,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color:
-                                Colors.white70),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
+          MoodSelector(
+            selectedMoodId: _selectedMood,
+            onSelected: (moodId) {
+              setState(() {
+                _selectedMood = moodId;
+              });
+            },
           ),
 
           const SizedBox(height: 20),

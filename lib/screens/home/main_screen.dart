@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/app_scaffold.dart';
 import 'home.dart';
 import '../settings/settings.dart';
 import '../goals_screen.dart';
@@ -41,7 +40,7 @@ class _MainScreenState extends State<MainScreen> {
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return AppScaffold(
+    return Scaffold(
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
