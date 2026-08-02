@@ -8,40 +8,80 @@ import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
-  // static Future<void> showTestNotification() async {
-  //   await _notificationsPlugin.show(
-  //     999, // Unique ID
-  //     'Test Notification',
-  //     'This is a test notification triggered on app start.',
-  //     const NotificationDetails(
-  //       android: AndroidNotificationDetails(
-  //         'test_channel', // Channel ID
-  //         'Test Notifications', // Channel name
-  //         channelDescription: 'Channel for test notifications',
-  //         importance: Importance.max,
-  //         priority: Priority.high,
-  //         color: Color(0xFF4B0082), // Indigo/dark purple
-  //         styleInformation: BigTextStyleInformation(
-  //           'This is a test notification triggered on app start.',
-  //         ),
-  //         enableLights: true,
-  //         ledColor: Color(0xFF4B0082), // Optional: LED light
-  //         ledOnMs: 1000,
-  //         ledOffMs: 500,
-  //       ),
-  //     ),
-  //   );
-  // }
+  static Future<bool> requestExactAlarmPermission() async {
+    if (!Platform.isAndroid) return true;
 
-  static Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
-    const initSettings = InitializationSettings(android: androidSettings);
-    await _notificationsPlugin.initialize(initSettings);
-    tz.initializeTimeZones();
+    final androidPlugin =
+    _notificationsPlugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    final granted =
+    await androidPlugin?.requestExactAlarmsPermission();
+
+    debugPrint('⏰ Exact alarm permission: $granted');
+
+    return granted ?? false;
   }
+  static Future<void> showTestNotification() async {
+    await _notificationsPlugin.show(
+      999,
+      'RDiary Test 💜',
+      'Notifications are working!',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'rdiary_test_channel',
+          'RDiary Test Notifications',
+          channelDescription: 'Testing RDiary notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+    );
 
+    debugPrint('Immediate notification sent');
+  }
+  static Future<void> scheduleExponentialTest() async {
+    final now = tz.TZDateTime.now(tz.local);
+
+    // Delays from NOW: 30s, 60s, 120s, 240s, 480s
+    final delays = <int>[30, 60, 120, 240, 480];
+
+    for (int i = 0; i < delays.length; i++) {
+      final seconds = delays[i];
+      final scheduledTime =
+      now.add(Duration(seconds: seconds));
+
+      debugPrint(
+        '⏰ Notification #${i + 1} scheduled in ${seconds}s at $scheduledTime',
+      );
+
+      try {
+        await _notificationsPlugin.zonedSchedule(
+          12345 + i, // Each notification MUST have unique ID
+          'RDiary Test 💜',
+          'Notification #${i + 1} — fired after $seconds seconds!',
+          scheduledTime,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'rdiary_test_channel_v2',
+              'RDiary Test Notifications',
+              channelDescription: 'Testing scheduled notifications',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+          androidScheduleMode:
+          AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+        );
+
+        debugPrint('✅ Notification #${i + 1} scheduled successfully');
+      } catch (e) {
+        debugPrint('❌ Notification #${i + 1} failed: $e');
+      }
+    }
+  }
   static Future<void> requestPermission() async {
     if (Platform.isAndroid) {
       final status = await Permission.notification.status;
@@ -68,7 +108,7 @@ class NotificationService {
       ),
       androidAllowWhileIdle: true,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -90,4 +130,13 @@ class NotificationService {
     }
     return scheduled;
   }
+  static Future<void> init() async {
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+    const initSettings = InitializationSettings(android: androidSettings);
+    await _notificationsPlugin.initialize(initSettings);
+    tz.initializeTimeZones();
+  }
+
 }

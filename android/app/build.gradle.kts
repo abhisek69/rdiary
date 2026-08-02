@@ -7,13 +7,14 @@ plugins {
 
 android {
     namespace = "com.example.rdiary"
-    compileSdk = 35
+    compileSdk = 36
+    buildToolsVersion = "34.0.0"
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.example.rdiary"
-        minSdk = 23
-        targetSdk = 35
+        minSdk = flutter.minSdkVersion
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }

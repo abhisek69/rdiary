@@ -19,7 +19,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationService.init();
-  await NotificationService.requestPermission(); // ✅ Proper permission check
+  await NotificationService.requestPermission();
+  final exactAllowed =
+  await NotificationService.requestExactAlarmPermission();
+  // ✅ Proper permission check
   // await NotificationService.showTestNotification();
 
   runApp(
@@ -31,6 +34,13 @@ void main() async {
       child: const DiaryApp(),
     ),
   );
+  if (exactAllowed) {
+    debugPrint('🚀 Scheduling 30-second test...');
+    await NotificationService.scheduleExponentialTest();
+  } else {
+    debugPrint('❌ Cannot schedule: exact alarm permission missing');
+  }
+  await NotificationService.showTestNotification();
 }
 
 class DiaryApp extends StatelessWidget {
