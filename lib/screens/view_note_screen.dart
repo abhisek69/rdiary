@@ -57,16 +57,16 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
       appBar: AppBar(
         title: const Text('Your Diary Note'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddSubjectScreen()),
-              );
-              await _refreshNoteFromFirestore();
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.edit),
+          //   onPressed: () async {
+          //     await Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (_) => const AddSubjectScreen()),
+          //     );
+          //     await _refreshNoteFromFirestore();
+          //   },
+          // ),
         ],
       ),
       body:

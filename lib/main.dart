@@ -41,11 +41,18 @@ void main() async {
 
   if (exactAllowed) {
     debugPrint(
-      '🚀 Building RDiary goal reminder schedule...',
+      '🚀 Building RDiary notification schedule...',
     );
 
+    // 🎯 Goal reminders
     await NotificationService
         .scheduleUpcomingGoalReminders(
+      daysAhead: 7,
+    );
+
+    // 📖 Diary reminders
+    await NotificationService
+        .scheduleUpcomingDiaryReminders(
       daysAhead: 7,
     );
   } else {
