@@ -29,97 +29,188 @@ class _CalendarSectionState
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final surface = theme.colorScheme.surface;
-    final onSurface = theme.colorScheme.onSurface;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.fromLTRB(
+        12,
+        12,
+        12,
+        0,
+      ),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(
+          milliseconds: 300,
+        ),
         curve: Curves.easeInOut,
+
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
+
+          // ======================================================
+          // GLASS / NORMAL SURFACE
+          // ======================================================
+
+          color: isDark
+              ? Colors.black.withOpacity(0.48)
+              : surface,
+
+          // ======================================================
+          // PRIMARY COLOR BORDER
+          // ======================================================
+
           border: Border.all(
-            color: primary.withOpacity(0.8),
-            width: 1.5,
+            color: isDark
+                ? primary.withOpacity(0.75)
+                : primary.withOpacity(0.8),
+            width: isDark ? 1.2 : 1.5,
           ),
+
+          // ======================================================
+          // COSMIC GLOW
+          // ======================================================
+
           boxShadow: [
             BoxShadow(
-              color: primary.withOpacity(0.25),
-              blurRadius: 25,
-              spreadRadius: 2,
+              color: primary.withOpacity(
+                isDark ? 0.22 : 0.25,
+              ),
+              blurRadius: isDark ? 30 : 25,
+              spreadRadius: isDark ? 1 : 2,
             ),
           ],
-          color: surface,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
 
-              /// HEADER (Tap to collapse)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isExpanded = !_isExpanded;
-                  });
-                },
-                child: Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_month_rounded,
-                          color: primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Your Journal",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: primary,
-                            letterSpacing: 0.5,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+
+            child: Column(
+              children: [
+                // ==================================================
+                // HEADER
+                // ==================================================
+
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+
+                  onTap: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+
+                  child: Row(
+                    mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      Row(
+                        children: [
+                          // ------------------------------------------
+                          // CALENDAR ICON
+                          // ------------------------------------------
+
+                          Container(
+                            width: 34,
+                            height: 34,
+
+                            decoration: BoxDecoration(
+                              borderRadius:
+                              BorderRadius.circular(9),
+
+                              color: isDark
+                                  ? primary.withOpacity(0.15)
+                                  : primary.withOpacity(0.10),
+
+                              boxShadow: isDark
+                                  ? [
+                                BoxShadow(
+                                  color: primary
+                                      .withOpacity(0.22),
+                                  blurRadius: 12,
+                                ),
+                              ]
+                                  : null,
+                            ),
+
+                            child: Icon(
+                              Icons.calendar_month_rounded,
+                              color: primary,
+                              size: 20,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
 
-                    AnimatedRotation(
-                      turns: _isExpanded ? 0.5 : 0,
-                      duration:
-                      const Duration(milliseconds: 300),
-                      child: Icon(
-                        Icons.expand_more,
-                        color: primary,
+                          const SizedBox(width: 10),
+
+                          Text(
+                            'Your Journal',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : primary,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-              /// COLLAPSIBLE CALENDAR
-              AnimatedCrossFade(
-                duration:
-                const Duration(milliseconds: 300),
-                crossFadeState: _isExpanded
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                firstChild: Column(
-                  children: [
-                    const SizedBox(height: 12),
-                    DiaryCalendar(
-                      selectedDay: widget.selectedDay,
-                      focusedDay: widget.focusedDay,
-                      onDaySelected:
-                      widget.onDaySelected,
-                    ),
-                  ],
+                      // --------------------------------------------
+                      // COLLAPSE BUTTON
+                      // --------------------------------------------
+
+                      AnimatedRotation(
+                        turns: _isExpanded ? 0.5 : 0,
+                        duration: const Duration(
+                          milliseconds: 300,
+                        ),
+                        child: Icon(
+                          Icons.expand_more_rounded,
+                          color: primary,
+                          size: 26,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                secondChild: const SizedBox(),
-              ),
-            ],
+
+                // ==================================================
+                // CALENDAR
+                // ==================================================
+
+                AnimatedCrossFade(
+                  duration: const Duration(
+                    milliseconds: 300,
+                  ),
+
+                  crossFadeState: _isExpanded
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+
+                  firstChild: Column(
+                    children: [
+                      const SizedBox(height: 12),
+
+                      DiaryCalendar(
+                        selectedDay:
+                        widget.selectedDay,
+                        focusedDay:
+                        widget.focusedDay,
+                        onDaySelected:
+                        widget.onDaySelected,
+                      ),
+                    ],
+                  ),
+
+                  secondChild:
+                  const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
         ),
       ),

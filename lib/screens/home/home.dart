@@ -10,7 +10,7 @@ import '../../utils/pulseLoader.dart';
 import 'calendar_section.dart';
 import 'goals_section.dart';
 import 'notes_section.dart';
-
+import 'designs/cosmic_bg.dart';
 class HomeScreen extends StatefulWidget {
   final DateTime? initialDate;
 
@@ -309,15 +309,184 @@ class _HomeScreenState extends State<HomeScreen> {
   // BUILD
   // ============================================================
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // ==========================================================
+    // HOME CONTENT
+    // ==========================================================
+
+    final homeContent = Column(
+      children: [
+        // ------------------------------------------------------
+        // CALENDAR
+        // ------------------------------------------------------
+
+        CalendarSection(
+          selectedDay: _selectedDay,
+          focusedDay: _focusedDay,
+          onDaySelected: _onDaySelected,
+        ),
+
+        // ------------------------------------------------------
+        // GOALS + NOTES
+        // ------------------------------------------------------
+
+        Expanded(
+          child: _isLoading
+              ? Center(
+            child: AppLoader(
+              loadingColor: primary,
+              type: LoaderType.halfTriangleDot,
+              size: 120,
+            ),
+          )
+              : SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+              children: [
+                // ========================================
+                // GOALS
+                // ========================================
+
+                GoalsSection(
+                  goals: _goalsForSelectedDate,
+                  selectedDay: _selectedDay,
+                  refreshCallback: () =>
+                      _fetchNotesForDate(
+                        _selectedDay,
+                      ),
+                ),
+
+                // ========================================
+                // NOTES
+                // ========================================
+
+                NotesSection(
+                  notes: _notesForSelectedDate,
+                  selectedDay: _selectedDay,
+                  refreshCallback:
+                  _fetchNotesForDate,
+                ),
+
+                // ========================================
+                // EMPTY STATE
+                // ========================================
+
+                if (_notesForSelectedDate.isEmpty &&
+                    _goalsForSelectedDate.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 60,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No entries for this date yet.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDark
+                              ? Colors.white.withOpacity(
+                            0.45,
+                          )
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+
+    // ==========================================================
+    // ACTUAL HOME SCAFFOLD
+    // ==========================================================
+
+    final scaffold = Scaffold(
+      // IMPORTANT:
+      // CosmicBackground is OUTSIDE this Scaffold in dark mode.
+      backgroundColor:
+      isDark ? Colors.transparent : null,
+
+      extendBodyBehindAppBar: isDark,
+
       // ========================================================
       // APP BAR
       // ========================================================
 
       appBar: AppBar(
-        title: const Text(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+
+        backgroundColor:
+        isDark ? Colors.transparent : primary,
+
+        toolbarHeight: isDark ? 100 : null,
+
+        titleSpacing: 20,
+
+        title: isDark
+            ? Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Rocky's Diary",
+                  style: TextStyle(
+                    color: primary,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                    shadows: [
+                      Shadow(
+                        color:
+                        primary.withOpacity(0.45),
+                        blurRadius: 14,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 7),
+
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: primary,
+                  size: 16,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 3),
+
+            Text(
+              'Capture today, plan tomorrow.',
+              style: TextStyle(
+                color:
+                Colors.white.withOpacity(0.62),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        )
+            : const Text(
           "Rocky's Diary",
         ),
       ),
@@ -326,136 +495,86 @@ class _HomeScreenState extends State<HomeScreen> {
       // BODY
       // ========================================================
 
-      body: Column(
-        children: [
-          // ----------------------------------------------------
-          // CALENDAR
-          // ----------------------------------------------------
-
-          CalendarSection(
-            selectedDay: _selectedDay,
-            focusedDay: _focusedDay,
-            onDaySelected: _onDaySelected,
-          ),
-
-          // ----------------------------------------------------
-          // CONTENT
-          // ----------------------------------------------------
-
-          Expanded(
-            child: _isLoading
-                ? Center(
-              child: AppLoader(
-                loadingColor:
-                Theme.of(context)
-                    .colorScheme
-                    .primary,
-                type:
-                LoaderType
-                    .halfTriangleDot,
-                size: 120,
-              ),
-            )
-                : SingleChildScrollView(
-              padding:
-              const EdgeInsets.all(
-                12,
-              ),
-              child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: [
-                  // ======================================
-                  // GOALS
-                  // ======================================
-
-                  GoalsSection(
-                    goals:
-                    _goalsForSelectedDate,
-                    selectedDay:
-                    _selectedDay,
-                    refreshCallback: () =>
-                        _fetchNotesForDate(
-                          _selectedDay,
-                        ),
-                  ),
-
-                  // ======================================
-                  // NOTES
-                  // ======================================
-
-                  NotesSection(
-                    notes:
-                    _notesForSelectedDate,
-                    selectedDay:
-                    _selectedDay,
-                    refreshCallback:
-                    _fetchNotesForDate,
-                  ),
-
-                  // ======================================
-                  // EMPTY STATE
-                  // ======================================
-
-                  if (_notesForSelectedDate
-                      .isEmpty &&
-                      _goalsForSelectedDate
-                          .isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding:
-                        EdgeInsets.only(
-                          top: 60,
-                        ),
-                        child: Text(
-                          'No entries for this date yet.',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color:
-                            Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: isDark
+          ? Padding(
+        // AppBar is transparent and body extends behind it.
+        padding: EdgeInsets.only(
+          top:
+          MediaQuery.of(context).padding.top +
+              100,
+        ),
+        child: homeContent,
+      )
+          : homeContent,
 
       // ========================================================
       // ADD NOTE BUTTON
       // ========================================================
 
-      floatingActionButton:
-      FloatingActionButton(
-        backgroundColor:
-        Theme.of(context)
-            .colorScheme
-            .primary,
+      floatingActionButton: Container(
+        decoration: isDark
+            ? BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color:
+              primary.withOpacity(0.45),
+              blurRadius: 22,
+              spreadRadius: 2,
+            ),
+          ],
+        )
+            : null,
 
-        onPressed: () async {
-          await Navigator.pushNamed(
-            context,
-            '/add',
-            arguments: _selectedDay,
-          );
+        child: FloatingActionButton(
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
 
-          // User could navigate away while AddNote
-          // screen was open.
-          if (!mounted) return;
+          onPressed: () async {
+            await Navigator.pushNamed(
+              context,
+              '/add',
+              arguments: _selectedDay,
+            );
 
-          // Refresh after returning from AddNote.
-          await _fetchNotesForDate(
-            _selectedDay,
-          );
-        },
+            if (!mounted) return;
 
-        child: const Icon(
-          Icons.add,
+            await _fetchNotesForDate(
+              _selectedDay,
+            );
+          },
+
+          child: const Icon(
+            Icons.add_rounded,
+            size: 30,
+          ),
         ),
       ),
+    );
+
+    // ==========================================================
+    // LIGHT MODE
+    // ==========================================================
+
+    if (!isDark) {
+      return scaffold;
+    }
+
+    // ==========================================================
+    // DARK MODE — COSMIC UNIVERSE
+    //
+    // The important architecture:
+    //
+    // CosmicBackground
+    //      ↓
+    // transparent Scaffold
+    //      ↓
+    // actual interactive UI
+    // ==========================================================
+
+    return CosmicBackground(
+      accentColor: primary,
+      child: scaffold,
     );
   }
 }
