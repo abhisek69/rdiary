@@ -17,13 +17,17 @@ import 'package:rdiary/screens/lock_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp();
+
+  // Initialize local notifications
   await NotificationService.init();
+
+  // Notification permission
   await NotificationService.requestPermission();
-  final exactAllowed =
-  await NotificationService.requestExactAlarmPermission();
-  // ✅ Proper permission check
-  // await NotificationService.showTestNotification();
+
+  // Exact alarm permission
+  final exactAllowed = await NotificationService.requestExactAlarmPermission();
 
   runApp(
     MultiProvider(
@@ -34,14 +38,23 @@ void main() async {
       child: const DiaryApp(),
     ),
   );
+
   if (exactAllowed) {
-    debugPrint('🚀 Scheduling 30-second test...');
-    await NotificationService.scheduleExponentialTest();
+    debugPrint(
+      '🚀 Building RDiary goal reminder schedule...',
+    );
+
+    await NotificationService
+        .scheduleUpcomingGoalReminders(
+      daysAhead: 7,
+    );
   } else {
-    debugPrint('❌ Cannot schedule: exact alarm permission missing');
+    debugPrint(
+      '❌ Exact alarm permission missing.',
+    );
   }
-  await NotificationService.showTestNotification();
 }
+
 
 class DiaryApp extends StatelessWidget {
   const DiaryApp({super.key});
