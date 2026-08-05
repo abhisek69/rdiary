@@ -10,7 +10,9 @@ import '../../utils/pulseLoader.dart';
 import 'calendar_section.dart';
 import 'goals_section.dart';
 import 'notes_section.dart';
-import 'designs/cosmic_bg.dart';
+import '../../backgrounds/diary_world/diary_world.dart';
+import '../../backgrounds/diary_world/diary_world_background.dart';
+
 class HomeScreen extends StatefulWidget {
   final DateTime? initialDate;
 
@@ -565,14 +567,15 @@ class _HomeScreenState extends State<HomeScreen> {
     //
     // The important architecture:
     //
-    // CosmicBackground
+    // DiaryWorldBackground
     //      ↓
     // transparent Scaffold
     //      ↓
     // actual interactive UI
     // ==========================================================
 
-    return CosmicBackground(
+    return DiaryWorldBackground(
+      scene: DiaryScene.home,
       accentColor: primary,
       child: scaffold,
     );

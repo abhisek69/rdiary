@@ -8,7 +8,8 @@ import '../../models/note.dart';
 import '../../widgets/diary_card.dart';
 import '../../widgets/mood_selector.dart';
 
-import 'designs/cosmic_bg.dart';
+import '../../backgrounds/diary_world/diary_world.dart';
+import '../../backgrounds/diary_world/diary_world_background.dart';
 import 'widgets/notes_archive_header.dart';
 import 'widgets/note_group_timeline_header.dart';
 import 'widgets/notes_empty_state.dart';
@@ -624,7 +625,8 @@ class _NotesScreenState extends State<NotesScreen> {
     // ═════════════════════════════════════════════════════════════
 
     if (isDark) {
-      return CosmicBackground(
+      return DiaryWorldBackground(
+        scene: DiaryScene.notes,
         accentColor: primary,
         child: screen,
       );

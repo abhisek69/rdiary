@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-import '../home/designs/cosmic_bg.dart';
+import '../../backgrounds/diary_world/diary_world.dart';
+import '../../backgrounds/diary_world/diary_world_background.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -1281,7 +1282,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
     // ═════════════════════════════════════════════════════════════
 
     if (isDark) {
-      return CosmicBackground(
+      return DiaryWorldBackground(
+        scene: DiaryScene.goals,
         accentColor: primary,
         child: screen,
       );

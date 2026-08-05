@@ -1,32 +1,21 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'diary_world.dart';
 
-/// ═══════════════════════════════════════════════════════════════
-/// 🌌 RDIARY COSMIC SCENES
-///
-/// Every main screen lives in the same universe, but we shift
-/// celestial objects around so changing pages actually feels
-/// like travelling through that universe.
-/// ═══════════════════════════════════════════════════════════════
+/// ═════════════════════════════════════════════════════════════════
+/// 🌌 COSMIC WORLD BACKGROUND
+/// ═════════════════════════════════════════════════════════════════
 
-enum CosmicScene {
-  home,
-  notes,
-  goals,
-}
-
-class CosmicBackground extends StatelessWidget {
+class CosmicWorldBackground extends StatelessWidget {
   final Widget child;
   final Color accentColor;
-  final CosmicScene scene;
+  final DiaryScene scene;
 
-  const CosmicBackground({
+  const CosmicWorldBackground({
     super.key,
     required this.child,
     required this.accentColor,
-
-    // Existing screens won't break.
-    this.scene = CosmicScene.home,
+    required this.scene,
   });
 
   @override
@@ -99,7 +88,7 @@ class CosmicBackground extends StatelessWidget {
 
 class _CosmicPainter extends CustomPainter {
   final Color accentColor;
-  final CosmicScene scene;
+  final DiaryScene scene;
 
   _CosmicPainter({
     required this.accentColor,
@@ -108,49 +97,45 @@ class _CosmicPainter extends CustomPainter {
 
   // ═══════════════════════════════════════════════════════════════
   // 🎲 UNIQUE SCENE SEEDS
-  //
-  // IMPORTANT:
-  // We use fixed seeds.
-  //
-  // That means:
-  // Home stars are always Home stars.
-  // Notes stars are always Notes stars.
-  // Goals stars are always Goals stars.
-  //
-  // They DON'T randomly jump around when Flutter rebuilds.
   // ═══════════════════════════════════════════════════════════════
 
   int get _starSeed {
     switch (scene) {
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         return 42;
 
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         return 927;
 
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         return 1643;
     }
   }
 
   int get _dustSeed {
     switch (scene) {
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         return 731;
 
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         return 284;
 
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         return 1987;
     }
   }
 
   @override
   void paint(
-      Canvas canvas,
-      Size size,
-      ) {
+    Canvas canvas,
+    Size size,
+  ) {
     _paintNebulaClouds(
       canvas,
       size,
@@ -182,17 +167,12 @@ class _CosmicPainter extends CustomPainter {
   // ═══════════════════════════════════════════════════════════════
 
   void _paintNebulaClouds(
-      Canvas canvas,
-      Size size,
-      ) {
+    Canvas canvas,
+    Size size,
+  ) {
     switch (scene) {
-    // ─────────────────────────────────────────────────────────
-    // 🏠 HOME
-    //
-    // Strong upper-right nebula around the moon.
-    // ─────────────────────────────────────────────────────────
-
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         _nebula(
           canvas,
           center: Offset(
@@ -253,17 +233,10 @@ class _CosmicPainter extends CustomPainter {
             size.height * 0.30,
           ),
         );
-
         break;
 
-    // ─────────────────────────────────────────────────────────
-    // 📖 NOTES
-    //
-    // Nebula moves toward the left / center.
-    // This gives Memory Archive a different sky.
-    // ─────────────────────────────────────────────────────────
-
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         _nebula(
           canvas,
           center: Offset(
@@ -324,16 +297,10 @@ class _CosmicPainter extends CustomPainter {
             size.height * 0.25,
           ),
         );
-
         break;
 
-    // ─────────────────────────────────────────────────────────
-    // 🎯 GOALS
-    //
-    // More vertical/deep-space composition.
-    // ─────────────────────────────────────────────────────────
-
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         _nebula(
           canvas,
           center: Offset(
@@ -394,23 +361,18 @@ class _CosmicPainter extends CustomPainter {
             size.height * 0.72,
           ),
         );
-
         break;
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🌫️ NEBULA STREAK
-  // ═══════════════════════════════════════════════════════════════
-
   void _paintNebulaStreak(
-      Canvas canvas,
-      Size size, {
-        required Offset start,
-        required Offset control1,
-        required Offset control2,
-        required Offset end,
-      }) {
+    Canvas canvas,
+    Size size, {
+    required Offset start,
+    required Offset control1,
+    required Offset control2,
+    required Offset end,
+  }) {
     final path = Path()
       ..moveTo(
         start.dx,
@@ -429,10 +391,8 @@ class _CosmicPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = size.width * 0.16
       ..strokeCap = StrokeCap.round
-      ..color =
-      accentColor.withOpacity(0.055)
-      ..maskFilter =
-      const MaskFilter.blur(
+      ..color = accentColor.withOpacity(0.055)
+      ..maskFilter = const MaskFilter.blur(
         BlurStyle.normal,
         32,
       );
@@ -444,13 +404,10 @@ class _CosmicPainter extends CustomPainter {
 
     final corePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth =
-          size.width * 0.035
+      ..strokeWidth = size.width * 0.035
       ..strokeCap = StrokeCap.round
-      ..color =
-      accentColor.withOpacity(0.10)
-      ..maskFilter =
-      const MaskFilter.blur(
+      ..color = accentColor.withOpacity(0.10)
+      ..maskFilter = const MaskFilter.blur(
         BlurStyle.normal,
         18,
       );
@@ -461,16 +418,12 @@ class _CosmicPainter extends CustomPainter {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🌌 NEBULA CLOUD
-  // ═══════════════════════════════════════════════════════════════
-
   void _nebula(
-      Canvas canvas, {
-        required Offset center,
-        required double radius,
-        required double opacity,
-      }) {
+    Canvas canvas, {
+    required Offset center,
+    required double radius,
+    required double opacity,
+  }) {
     final rect = Rect.fromCircle(
       center: center,
       radius: radius,
@@ -510,70 +463,48 @@ class _CosmicPainter extends CustomPainter {
   // ═══════════════════════════════════════════════════════════════
 
   void _paintCosmicDust(
-      Canvas canvas,
-      Size size,
-      ) {
-    final random =
-    math.Random(_dustSeed);
+    Canvas canvas,
+    Size size,
+  ) {
+    final random = math.Random(_dustSeed);
 
     for (int i = 0; i < 90; i++) {
-      final progress =
-      random.nextDouble();
+      final progress = random.nextDouble();
 
       double x;
       double y;
 
       switch (scene) {
-        case CosmicScene.home:
-          x = size.width * progress +
-              random.nextDouble() * 100 -
-              50;
+        case DiaryScene.home:
+        case DiaryScene.editor:
+          x = size.width * progress + random.nextDouble() * 100 - 50;
 
-          y = size.height *
-              (0.65 -
-                  progress * 0.32) +
-              random.nextDouble() * 150 -
-              75;
+          y = size.height * (0.65 - progress * 0.32) + random.nextDouble() * 150 - 75;
 
           break;
 
-        case CosmicScene.notes:
-          x = size.width *
-              (1.0 - progress) +
-              random.nextDouble() * 110 -
-              55;
+        case DiaryScene.notes:
+        case DiaryScene.viewNote:
+          x = size.width * (1.0 - progress) + random.nextDouble() * 110 - 55;
 
-          y = size.height *
-              (0.22 +
-                  progress * 0.48) +
-              random.nextDouble() * 150 -
-              75;
+          y = size.height * (0.22 + progress * 0.48) + random.nextDouble() * 150 - 75;
 
           break;
 
-        case CosmicScene.goals:
-          x = size.width * progress +
-              random.nextDouble() * 120 -
-              60;
+        case DiaryScene.goals:
+        case DiaryScene.viewGoal:
+          x = size.width * progress + random.nextDouble() * 120 - 60;
 
-          y = size.height *
-              (0.20 +
-                  progress * 0.58) +
-              random.nextDouble() * 160 -
-              80;
+          y = size.height * (0.20 + progress * 0.58) + random.nextDouble() * 160 - 80;
 
           break;
       }
 
-      final radius =
-          0.4 +
-              random.nextDouble() * 1.5;
+      final radius = 0.4 + random.nextDouble() * 1.5;
 
       final paint = Paint()
-        ..color =
-        accentColor.withOpacity(
-          0.08 +
-              random.nextDouble() * 0.25,
+        ..color = accentColor.withOpacity(
+          0.08 + random.nextDouble() * 0.25,
         );
 
       canvas.drawCircle(
@@ -589,39 +520,30 @@ class _CosmicPainter extends CustomPainter {
   // ═══════════════════════════════════════════════════════════════
 
   void _paintStars(
-      Canvas canvas,
-      Size size,
-      ) {
-    // Different fixed seed for every screen.
-    final random =
-    math.Random(_starSeed);
+    Canvas canvas,
+    Size size,
+  ) {
+    final random = math.Random(_starSeed);
 
     for (int i = 0; i < 145; i++) {
       final position = Offset(
-        random.nextDouble() *
-            size.width,
-        random.nextDouble() *
-            size.height,
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height,
       );
 
-      final radius =
-          0.35 +
-              random.nextDouble() * 1.15;
+      final radius = 0.35 + random.nextDouble() * 1.15;
 
-      final accentStar =
-          random.nextDouble() > 0.78;
+      final accentStar = random.nextDouble() > 0.78;
 
-      final opacity =
-          0.22 +
-              random.nextDouble() * 0.65;
+      final opacity = 0.22 + random.nextDouble() * 0.65;
 
       final color = accentStar
           ? accentColor.withOpacity(
-        opacity,
-      )
+              opacity,
+            )
           : Colors.white.withOpacity(
-        opacity,
-      );
+              opacity,
+            );
 
       canvas.drawCircle(
         position,
@@ -629,16 +551,13 @@ class _CosmicPainter extends CustomPainter {
         Paint()..color = color,
       );
 
-      // ✨ Glow around larger stars.
       if (radius > 1.15) {
         canvas.drawCircle(
           position,
           radius * 4,
           Paint()
-            ..color =
-            color.withOpacity(0.12)
-            ..maskFilter =
-            const MaskFilter.blur(
+            ..color = color.withOpacity(0.12)
+            ..maskFilter = const MaskFilter.blur(
               BlurStyle.normal,
               5,
             ),
@@ -646,14 +565,9 @@ class _CosmicPainter extends CustomPainter {
       }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // ✨ INTENTIONAL BRIGHT STARS
-    //
-    // Different constellation for each page.
-    // ═══════════════════════════════════════════════════════════
-
     switch (scene) {
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         _brightStar(
           canvas,
           Offset(
@@ -680,10 +594,10 @@ class _CosmicPainter extends CustomPainter {
           ),
           2,
         );
-
         break;
 
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         _brightStar(
           canvas,
           Offset(
@@ -710,10 +624,10 @@ class _CosmicPainter extends CustomPainter {
           ),
           2.6,
         );
-
         break;
 
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         _brightStar(
           canvas,
           Offset(
@@ -740,25 +654,18 @@ class _CosmicPainter extends CustomPainter {
           ),
           2.1,
         );
-
         break;
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // ✨ BRIGHT STAR
-  // ═══════════════════════════════════════════════════════════════
-
   void _brightStar(
-      Canvas canvas,
-      Offset center,
-      double radius,
-      ) {
+    Canvas canvas,
+    Offset center,
+    double radius,
+  ) {
     final glow = Paint()
-      ..color =
-      accentColor.withOpacity(0.50)
-      ..maskFilter =
-      const MaskFilter.blur(
+      ..color = accentColor.withOpacity(0.50)
+      ..maskFilter = const MaskFilter.blur(
         BlurStyle.normal,
         9,
       );
@@ -770,8 +677,7 @@ class _CosmicPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color =
-      Colors.white.withOpacity(0.95)
+      ..color = Colors.white.withOpacity(0.95)
       ..strokeWidth = 1;
 
     canvas.drawLine(
@@ -801,117 +707,73 @@ class _CosmicPainter extends CustomPainter {
     canvas.drawCircle(
       center,
       radius * 0.7,
-      Paint()
-        ..color = Colors.white,
+      Paint()..color = Colors.white,
     );
   }
 
   // ═══════════════════════════════════════════════════════════════
   // 🌙 PLANET POSITION
-  //
-  // The moon itself uses your CLEAN crescent implementation.
-  //
-  // We ONLY change its position and size depending on the page.
   // ═══════════════════════════════════════════════════════════════
 
   void _paintPlanet(
-      Canvas canvas,
-      Size size,
-      ) {
+    Canvas canvas,
+    Size size,
+  ) {
     late Offset center;
     late double radius;
 
     switch (scene) {
-    // 🏠 HOME
-    //
-    // Familiar upper-right moon.
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         center = Offset(
           size.width * 0.79,
           size.height * 0.105,
         );
-
-        radius =
-            size.width * 0.105;
-
+        radius = size.width * 0.105;
         break;
 
-    // 📖 NOTES
-    //
-    // Move moon toward the upper-left.
-    // Smaller so Memory Archive remains the focus.
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         center = Offset(
           size.width * 0.20,
           size.height * 0.145,
         );
-
-        radius =
-            size.width * 0.083;
-
+        radius = size.width * 0.083;
         break;
 
-    // 🎯 GOALS
-    //
-    // Moon moves right again, but lower than Home.
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         center = Offset(
           size.width * 0.84,
           size.height * 0.18,
         );
-
-        radius =
-            size.width * 0.088;
-
+        radius = size.width * 0.088;
         break;
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // ✨ ATMOSPHERIC GLOW
-    // ═══════════════════════════════════════════════════════════
 
     canvas.drawCircle(
       center,
       radius * 1.30,
       Paint()
-        ..color =
-        accentColor.withOpacity(0.20)
-        ..maskFilter =
-        const MaskFilter.blur(
+        ..color = accentColor.withOpacity(0.20)
+        ..maskFilter = const MaskFilter.blur(
           BlurStyle.normal,
           28,
         ),
     );
 
-    // ═══════════════════════════════════════════════════════════
-    // 🌑 DARK PLANET BODY
-    // ═══════════════════════════════════════════════════════════
-
     canvas.drawCircle(
       center,
       radius,
-      Paint()
-        ..color =
-        const Color(0xFF020205),
+      Paint()..color = const Color(0xFF020205),
     );
 
-    // ═══════════════════════════════════════════════════════════
-    // 🌙 CLEAN SINGLE CRESCENT
-    //
-    // This is the SAME technique that fixed the ugly overlapping
-    // circle line earlier.
-    //
-    // Do not replace this with two overlapping circles.
-    // ═══════════════════════════════════════════════════════════
-
     final crescent = Path();
-
     crescent.moveTo(
       center.dx,
       center.dy - radius,
     );
 
-    // Outer right edge
     crescent.cubicTo(
       center.dx + radius * 0.65,
       center.dy - radius,
@@ -930,7 +792,6 @@ class _CosmicPainter extends CustomPainter {
       center.dy + radius,
     );
 
-    // Inner crescent curve
     crescent.cubicTo(
       center.dx + radius * 0.50,
       center.dy + radius * 0.45,
@@ -942,12 +803,7 @@ class _CosmicPainter extends CustomPainter {
 
     crescent.close();
 
-    // ═══════════════════════════════════════════════════════════
-    // 🎨 CRESCENT GRADIENT
-    // ═══════════════════════════════════════════════════════════
-
-    final crescentBounds =
-    Rect.fromCircle(
+    final crescentBounds = Rect.fromCircle(
       center: center,
       radius: radius,
     );
@@ -963,21 +819,18 @@ class _CosmicPainter extends CustomPainter {
           Colors.white.withOpacity(
             0.98,
           ),
-
           Color.lerp(
-            Colors.white,
-            accentColor,
-            0.30,
-          ) ??
+                Colors.white,
+                accentColor,
+                0.30,
+              ) ??
               accentColor,
-
           accentColor,
-
           Color.lerp(
-            accentColor,
-            Colors.black,
-            0.18,
-          ) ??
+                accentColor,
+                Colors.black,
+                0.18,
+              ) ??
               accentColor,
         ],
         stops: const [
@@ -990,14 +843,11 @@ class _CosmicPainter extends CustomPainter {
         crescentBounds,
       );
 
-    // Glow first so the sharp crescent stays on top.
     canvas.drawPath(
       crescent,
       Paint()
-        ..color =
-        accentColor.withOpacity(0.16)
-        ..maskFilter =
-        const MaskFilter.blur(
+        ..color = accentColor.withOpacity(0.16)
+        ..maskFilter = const MaskFilter.blur(
           BlurStyle.normal,
           12,
         ),
@@ -1014,15 +864,15 @@ class _CosmicPainter extends CustomPainter {
   // ═══════════════════════════════════════════════════════════════
 
   void _paintShootingStar(
-      Canvas canvas,
-      Size size,
-      ) {
+    Canvas canvas,
+    Size size,
+  ) {
     late Offset head;
     late Offset tail;
 
     switch (scene) {
-    // 🏠 Shooting upward/right
-      case CosmicScene.home:
+      case DiaryScene.home:
+      case DiaryScene.editor:
         head = Offset(
           size.width * 0.58,
           size.height * 0.13,
@@ -1035,8 +885,8 @@ class _CosmicPainter extends CustomPainter {
 
         break;
 
-    // 📖 Shooting downward/right
-      case CosmicScene.notes:
+      case DiaryScene.notes:
+      case DiaryScene.viewNote:
         head = Offset(
           size.width * 0.72,
           size.height * 0.24,
@@ -1049,8 +899,8 @@ class _CosmicPainter extends CustomPainter {
 
         break;
 
-    // 🎯 Shooting from left toward upper-middle
-      case CosmicScene.goals:
+      case DiaryScene.goals:
+      case DiaryScene.viewGoal:
         head = Offset(
           size.width * 0.48,
           size.height * 0.17,
@@ -1064,8 +914,7 @@ class _CosmicPainter extends CustomPainter {
         break;
     }
 
-    final rect =
-    Rect.fromPoints(
+    final rect = Rect.fromPoints(
       tail,
       head,
     );
@@ -1083,8 +932,7 @@ class _CosmicPainter extends CustomPainter {
         ],
       ).createShader(rect)
       ..strokeWidth = 1.3
-      ..strokeCap =
-          StrokeCap.round;
+      ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(
       tail,
@@ -1096,12 +944,10 @@ class _CosmicPainter extends CustomPainter {
       head,
       7,
       Paint()
-        ..color =
-        accentColor.withOpacity(
+        ..color = accentColor.withOpacity(
           0.45,
         )
-        ..maskFilter =
-        const MaskFilter.blur(
+        ..maskFilter = const MaskFilter.blur(
           BlurStyle.normal,
           8,
         ),
@@ -1110,24 +956,14 @@ class _CosmicPainter extends CustomPainter {
     canvas.drawCircle(
       head,
       1.8,
-      Paint()
-        ..color = Colors.white,
+      Paint()..color = Colors.white,
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // ♻️ REPAINT
-  //
-  // Repaint not only when theme color changes, but also when
-  // switching between Home / Notes / Goals.
-  // ═══════════════════════════════════════════════════════════════
-
   @override
   bool shouldRepaint(
-      covariant _CosmicPainter oldDelegate,
-      ) {
-    return oldDelegate.accentColor !=
-        accentColor ||
-        oldDelegate.scene != scene;
+    covariant _CosmicPainter oldDelegate,
+  ) {
+    return oldDelegate.accentColor != accentColor || oldDelegate.scene != scene;
   }
 }
