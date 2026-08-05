@@ -1,5 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
+import '../../backgrounds/diary_world/diary_world.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/diary_calendar.dart';
+
+import 'package:provider/provider.dart';
 
 class CalendarSection extends StatefulWidget {
   final DateTime selectedDay;
@@ -23,161 +30,303 @@ class _CalendarSectionState extends State<CalendarSection>
 
   @override
   Widget build(BuildContext context) {
+    // ============================================================
+    // APP THEME
+    // ============================================================
+
     final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final surface = theme.colorScheme.surface;
+    final colors = theme.colorScheme;
+
+    final primary = colors.primary;
     final isDark = theme.brightness == Brightness.dark;
 
+    // ============================================================
+    // DIARY WORLD
+    // ============================================================
+
+    final themeProvider = context.watch<ThemeProvider>();
+    final selectedWorld = themeProvider.diaryWorld;
+
+    final worldEnabled = selectedWorld != DiaryWorld.simple;
+
+    final isCosmic =
+        selectedWorld == DiaryWorld.cosmicUniverse;
+
+    final isCosmicDark =
+        isCosmic && isDark;
+
+    final isCosmicLight =
+        isCosmic && !isDark;
+
+    // ============================================================
+    // SURFACE STYLE
+    // ============================================================
+
+    Color panelColor;
+
+    if (isCosmicDark) {
+      panelColor = Colors.black.withOpacity(0.48);
+    } else if (isCosmicLight) {
+      // MUCH more transparent.
+      panelColor = Colors.white.withOpacity(0.42);
+    } else {
+      panelColor = colors.surface;
+    }
+    // ============================================================
+    // BORDER
+    // ============================================================
+
+    final borderColor = worldEnabled
+        ? primary.withOpacity(
+      isDark ? 0.72 : 0.48,
+    )
+        : primary.withOpacity(0.40);
+
+    // ============================================================
+    // SHADOW / WORLD GLOW
+    // ============================================================
+
+    List<BoxShadow>? shadows;
+
+    if (isCosmicDark) {
+      shadows = [
+        BoxShadow(
+          color: primary.withOpacity(0.22),
+          blurRadius: 30,
+          spreadRadius: 1,
+        ),
+      ];
+    } else if (isCosmicLight) {
+      shadows = [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.08),
+          blurRadius: 14,
+          offset: const Offset(0, 5),
+        ),
+        BoxShadow(
+          color: primary.withOpacity(0.08),
+          blurRadius: 10,
+        ),
+      ];
+    }
+     else {
+      shadows = [
+        BoxShadow(
+          color: Colors.black.withOpacity(
+            isDark ? 0.15 : 0.05,
+          ),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ];
+    }
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+      padding: const EdgeInsets.fromLTRB(
+        12,
+        12,
+        12,
+        0,
+      ),
 
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
+      // ==========================================================
+      // CLIP FIRST SO BACKDROP BLUR STAYS INSIDE THE CARD
+      // ==========================================================
 
-          // ======================================================
-          // GLASS / NORMAL SURFACE
-          // ======================================================
-          color: isDark ? Colors.black.withOpacity(0.48) : surface,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
 
-          // ======================================================
-          // PRIMARY COLOR BORDER
-          // ======================================================
-          border: Border.all(
-            color:
-                isDark ? primary.withOpacity(0.75) : primary.withOpacity(0.8),
-            width: isDark ? 1.2 : 1.5,
+        child: BackdropFilter(
+          // Only meaningful for environmental worlds.
+          //
+          // Light Cosmic gets a little more blur because the
+          // daytime artwork contains more visible detail.
+          filter: ImageFilter.blur(
+            sigmaX: worldEnabled
+                ? (isCosmicLight ? 3 : 7)
+                : 0,
+            sigmaY: worldEnabled
+                ? (isCosmicLight ? 3 : 7)
+                : 0,
           ),
 
-          // ======================================================
-          // COSMIC GLOW
-          // ======================================================
-          boxShadow: [
-            BoxShadow(
-              color: primary.withOpacity(isDark ? 0.22 : 0.25),
-              blurRadius: isDark ? 30 : 25,
-              spreadRadius: isDark ? 1 : 2,
+          child: AnimatedContainer(
+            duration: const Duration(
+              milliseconds: 300,
             ),
-          ],
-        ),
+            curve: Curves.easeInOut,
 
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
 
-          child: Padding(
-            padding: const EdgeInsets.all(14),
+              // ==================================================
+              // FROSTED SURFACE
+              // ==================================================
 
-            child: Column(
-              children: [
-                // ==================================================
-                // HEADER
-                // ==================================================
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+              color: panelColor,
 
-                  onTap: () {
-                    setState(() {
-                      _isExpanded = !_isExpanded;
-                    });
-                  },
+              // ==================================================
+              // ACCENT BORDER
+              // ==================================================
 
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              border: Border.all(
+                color: borderColor,
+                width: worldEnabled ? 1.2 : 1,
+              ),
 
-                    children: [
-                      Row(
-                        children: [
-                          // ------------------------------------------
-                          // CALENDAR ICON
-                          // ------------------------------------------
-                          Container(
-                            width: 34,
-                            height: 34,
+              // ==================================================
+              // SHADOW / COSMIC GLOW
+              // ==================================================
 
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(9),
+              boxShadow: shadows,
+            ),
 
-                              color:
-                                  isDark
-                                      ? primary.withOpacity(0.15)
-                                      : primary.withOpacity(0.10),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
 
-                              boxShadow:
-                                  isDark
-                                      ? [
-                                        BoxShadow(
-                                          color: primary.withOpacity(0.22),
-                                          blurRadius: 12,
-                                        ),
-                                      ]
-                                      : null,
+              child: Column(
+                children: [
+                  // ==============================================
+                  // HEADER
+                  // ==============================================
+
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+
+                    onTap: () {
+                      setState(() {
+                        _isExpanded = !_isExpanded;
+                      });
+                    },
+
+                    child: Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        Row(
+                          children: [
+                            // ====================================
+                            // CALENDAR ICON
+                            // ====================================
+
+                            Container(
+                              width: 34,
+                              height: 34,
+
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                BorderRadius.circular(9),
+
+                                color: primary.withOpacity(
+                                  isCosmicDark
+                                      ? 0.15
+                                      : 0.10,
+                                ),
+
+                                border: isCosmicLight
+                                    ? Border.all(
+                                  color: primary.withOpacity(
+                                    0.12,
+                                  ),
+                                )
+                                    : null,
+
+                                boxShadow: isCosmicDark
+                                    ? [
+                                  BoxShadow(
+                                    color:
+                                    primary.withOpacity(
+                                      0.22,
+                                    ),
+                                    blurRadius: 12,
+                                  ),
+                                ]
+                                    : null,
+                              ),
+
+                              child: Icon(
+                                Icons.calendar_month_rounded,
+                                color: primary,
+                                size: 20,
+                              ),
                             ),
 
-                            child: Icon(
-                              Icons.calendar_month_rounded,
-                              color: primary,
-                              size: 20,
+                            const SizedBox(width: 10),
+
+                            // ====================================
+                            // TITLE
+                            // ====================================
+
+                            Text(
+                              'Your Journal',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+
+                                color: isCosmicDark
+                                    ? Colors.white
+                                    : isCosmicLight
+                                    ? colors.onSurface
+                                    : colors.onSurface,
+
+                                letterSpacing: 0.3,
+                              ),
                             ),
-                          ),
-
-                          const SizedBox(width: 10),
-
-                          Text(
-                            'Your Journal',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : primary,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // --------------------------------------------
-                      // COLLAPSE BUTTON
-                      // --------------------------------------------
-                      AnimatedRotation(
-                        turns: _isExpanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.expand_more_rounded,
-                          color: primary,
-                          size: 26,
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
 
-                // ==================================================
-                // CALENDAR
-                // ==================================================
-                AnimatedCrossFade(
-                  duration: const Duration(milliseconds: 300),
+                        // ========================================
+                        // COLLAPSE BUTTON
+                        // ========================================
 
-                  crossFadeState:
-                      _isExpanded
-                          ? CrossFadeState.showFirst
-                          : CrossFadeState.showSecond,
+                        AnimatedRotation(
+                          turns: _isExpanded ? 0.5 : 0,
+                          duration: const Duration(
+                            milliseconds: 300,
+                          ),
 
-                  firstChild: Column(
-                    children: [
-                      const SizedBox(height: 12),
-
-                      DiaryCalendar(
-                        selectedDay: widget.selectedDay,
-                        focusedDay: widget.focusedDay,
-                        onDaySelected: widget.onDaySelected,
-                      ),
-                    ],
+                          child: Icon(
+                            Icons.expand_more_rounded,
+                            color: primary,
+                            size: 26,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
-                  secondChild: const SizedBox.shrink(),
-                ),
-              ],
+                  // ==============================================
+                  // CALENDAR
+                  // ==============================================
+
+                  AnimatedCrossFade(
+                    duration: const Duration(
+                      milliseconds: 300,
+                    ),
+
+                    crossFadeState: _isExpanded
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+
+                    firstChild: Column(
+                      children: [
+                        const SizedBox(height: 12),
+
+                        DiaryCalendar(
+                          selectedDay: widget.selectedDay,
+                          focusedDay: widget.focusedDay,
+                          onDaySelected:
+                          widget.onDaySelected,
+                        ),
+                      ],
+                    ),
+
+                    secondChild:
+                    const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,37 +37,23 @@ class _NotesScreenState extends State<NotesScreen> {
   String _groupTitle(DateTime date) {
     final now = DateTime.now();
 
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final noteDate = DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    final noteDate = DateTime(date.year, date.month, date.day);
 
     if (noteDate == today) {
       return 'Today';
     }
 
-    if (noteDate ==
-        today.subtract(
-          const Duration(days: 1),
-        )) {
+    if (noteDate == today.subtract(const Duration(days: 1))) {
       return 'Yesterday';
     }
 
-    if (date.month == now.month &&
-        date.year == now.year) {
+    if (date.month == now.month && date.year == now.year) {
       return 'This Month';
     }
 
-    return DateFormat(
-      'MMMM yyyy',
-    ).format(date);
+    return DateFormat('MMMM yyyy').format(date);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -78,15 +66,12 @@ class _NotesScreenState extends State<NotesScreen> {
     // USER-SELECTED DIARY WORLD
     // ------------------------------------------------------------
 
-    final themeProvider =
-    context.watch<ThemeProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
 
-    final selectedWorld =
-        themeProvider.diaryWorld;
+    final selectedWorld = themeProvider.diaryWorld;
 
     /// Theme-less = no environmental world.
-    final worldEnabled =
-        selectedWorld != DiaryWorld.simple;
+    final worldEnabled = selectedWorld != DiaryWorld.simple;
 
     // ------------------------------------------------------------
     // NORMAL FLUTTER THEME
@@ -98,25 +83,16 @@ class _NotesScreenState extends State<NotesScreen> {
 
     final primary = colors.primary;
 
-    final isDark =
-        theme.brightness ==
-            Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
 
-    final user =
-        FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
     // ═════════════════════════════════════════════════════════════
     // 🔐 USER CHECK
     // ═════════════════════════════════════════════════════════════
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text(
-            'User not logged in',
-          ),
-        ),
-      );
+      return const Scaffold(body: Center(child: Text('User not logged in')));
     }
 
     // ═════════════════════════════════════════════════════════════
@@ -131,18 +107,13 @@ class _NotesScreenState extends State<NotesScreen> {
 
     final screen = Scaffold(
       backgroundColor:
-      worldEnabled
-          ? Colors.transparent
-          : theme.scaffoldBackgroundColor,
+          worldEnabled ? Colors.transparent : theme.scaffoldBackgroundColor,
 
       // ═══════════════════════════════════════════════════════════
       // 📖 APP BAR
       // ═══════════════════════════════════════════════════════════
-
       appBar: AppBar(
-        title: const Text(
-          'All Notes',
-        ),
+        title: const Text('All Notes'),
 
         centerTitle: true,
 
@@ -150,19 +121,14 @@ class _NotesScreenState extends State<NotesScreen> {
 
         scrolledUnderElevation: 0,
 
-        surfaceTintColor:
-        Colors.transparent,
+        surfaceTintColor: Colors.transparent,
 
-        backgroundColor:
-        worldEnabled
-            ? Colors.transparent
-            : null,
+        backgroundColor: worldEnabled ? Colors.transparent : null,
 
         actions: [
           // ─────────────────────────────────────────────────────
           // ↕️ SORT
           // ─────────────────────────────────────────────────────
-
           PopupMenuButton<String>(
             tooltip: 'Sort notes',
 
@@ -174,52 +140,36 @@ class _NotesScreenState extends State<NotesScreen> {
 
             itemBuilder:
                 (_) => const [
-              PopupMenuItem(
-                value: 'date_desc',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons
-                          .arrow_downward_rounded,
-                      size: 18,
+                  PopupMenuItem(
+                    value: 'date_desc',
+                    child: Row(
+                      children: [
+                        Icon(Icons.arrow_downward_rounded, size: 18),
+
+                        SizedBox(width: 9),
+
+                        Text('Newest First'),
+                      ],
                     ),
+                  ),
 
-                    SizedBox(width: 9),
+                  PopupMenuItem(
+                    value: 'date_asc',
+                    child: Row(
+                      children: [
+                        Icon(Icons.arrow_upward_rounded, size: 18),
 
-                    Text(
-                      'Newest First',
+                        SizedBox(width: 9),
+
+                        Text('Oldest First'),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-
-              PopupMenuItem(
-                value: 'date_asc',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons
-                          .arrow_upward_rounded,
-                      size: 18,
-                    ),
-
-                    SizedBox(width: 9),
-
-                    Text(
-                      'Oldest First',
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                ],
 
             icon: Icon(
               Icons.sort_rounded,
-              color:
-              worldEnabled &&
-                  isDark
-                  ? primary
-                  : null,
+              color: worldEnabled && isDark ? primary : null,
             ),
           ),
 
@@ -230,7 +180,6 @@ class _NotesScreenState extends State<NotesScreen> {
       // ═══════════════════════════════════════════════════════════
       // 📖 BODY
       // ═══════════════════════════════════════════════════════════
-
       body: Column(
         children: [
           // ═════════════════════════════════════════════════════
@@ -239,38 +188,68 @@ class _NotesScreenState extends State<NotesScreen> {
           // Only show the special environmental header while
           // a Diary World is enabled.
           // ═════════════════════════════════════════════════════
-
           if (worldEnabled)
-            NotesArchiveHeader(
-              primary: primary,
-            )
+            NotesArchiveHeader(primary: primary)
           else
             const SizedBox(height: 8),
 
           // ═════════════════════════════════════════════════════
           // 🎭 MOOD FILTER
           // ═════════════════════════════════════════════════════
-
           Padding(
-            padding:
-            const EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: 16,
             ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: isDark ? 5 : 4,
+                  sigmaY: isDark ? 5 : 4,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
 
-            child: MoodSelector(
-              selectedMoodId:
-              _selectedMood,
+                    color: isDark
+                        ? Colors.black.withOpacity(0.38)
+                        : Colors.white.withOpacity(0.34),
 
-              showLabel: false,
+                    border: Border.all(
+                      color: primary.withOpacity(
+                        isDark ? 0.48 : 0.42,
+                      ),
+                      width: 1.1,
+                    ),
 
-              includeAll: true,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withOpacity(
+                          isDark ? 0.10 : 0.07,
+                        ),
+                        blurRadius: 12,
+                      ),
+                    ],
+                  ),
 
-              onSelected: (moodId) {
-                setState(() {
-                  _selectedMood =
-                      moodId;
-                });
-              },
+                  child: MoodSelector(
+                    selectedMoodId: _selectedMood,
+                    showLabel: false,
+                    includeAll: true,
+
+                    onSelected: (moodId) {
+                      setState(() {
+                        _selectedMood = moodId;
+                      });
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
 
@@ -279,33 +258,17 @@ class _NotesScreenState extends State<NotesScreen> {
           // ═════════════════════════════════════════════════════
           // 📚 FIRESTORE NOTES
           // ═════════════════════════════════════════════════════
-
           Expanded(
-            child:
-            StreamBuilder<
-                QuerySnapshot
-            >(
+            child: StreamBuilder<QuerySnapshot>(
               stream:
-              FirebaseFirestore
-                  .instance
-                  .collection(
-                'users',
-              )
-                  .doc(user.uid)
-                  .collection(
-                'notes',
-              )
-                  .orderBy(
-                'date',
-                descending: true,
-              )
-                  .snapshots(),
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('notes')
+                      .orderBy('date', descending: true)
+                      .snapshots(),
 
-              builder:
-                  (
-                  context,
-                  snapshot,
-                  ) {
+              builder: (context, snapshot) {
                 // ═══════════════════════════════════════════════
                 // ❌ ERROR
                 // ═══════════════════════════════════════════════
@@ -313,65 +276,39 @@ class _NotesScreenState extends State<NotesScreen> {
                 if (snapshot.hasError) {
                   return Center(
                     child: Padding(
-                      padding:
-                      const EdgeInsets
-                          .all(24),
+                      padding: const EdgeInsets.all(24),
 
                       child: Column(
-                        mainAxisSize:
-                        MainAxisSize
-                            .min,
+                        mainAxisSize: MainAxisSize.min,
 
                         children: [
                           Icon(
-                            Icons
-                                .error_outline_rounded,
+                            Icons.error_outline_rounded,
                             size: 50,
-                            color:
-                            colors
-                                .error,
+                            color: colors.error,
                           ),
 
-                          const SizedBox(
-                            height: 14,
-                          ),
+                          const SizedBox(height: 14),
 
                           const Text(
                             'Could not load your notes.',
-                            style:
-                            TextStyle(
-                              fontSize:
-                              17,
-                              fontWeight:
-                              FontWeight
-                                  .bold,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 6,
-                          ),
+                          const SizedBox(height: 6),
 
                           Text(
-                            snapshot
-                                .error
-                                .toString(),
+                            snapshot.error.toString(),
 
-                            textAlign:
-                            TextAlign
-                                .center,
+                            textAlign: TextAlign.center,
 
-                            style:
-                            TextStyle(
-                              fontSize:
-                              12,
+                            style: TextStyle(
+                              fontSize: 12,
 
-                              color:
-                              colors
-                                  .onSurface
-                                  .withOpacity(
-                                0.60,
-                              ),
+                              color: colors.onSurface.withOpacity(0.60),
                             ),
                           ),
                         ],
@@ -384,97 +321,58 @@ class _NotesScreenState extends State<NotesScreen> {
                 // ⏳ LOADING
                 // ═══════════════════════════════════════════════
 
-                if (snapshot
-                    .connectionState ==
-                    ConnectionState
-                        .waiting) {
-                  return Center(
-                    child: AppLoader(
-                      loadingColor:
-                      primary,
-                    ),
-                  );
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: AppLoader(loadingColor: primary));
                 }
 
                 // ═══════════════════════════════════════════════
                 // 📭 NO NOTES
                 // ═══════════════════════════════════════════════
 
-                if (!snapshot.hasData ||
-                    snapshot
-                        .data!
-                        .docs
-                        .isEmpty) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return NotesEmptyState(
                     primary: primary,
-                    title:
-                    'No memories yet',
+                    title: 'No memories yet',
                     subtitle:
-                    'Your diary stories will appear here once you start writing.',
+                        'Your diary stories will appear here once you start writing.',
                   );
                 }
 
-                List<
-                    QueryDocumentSnapshot
-                > docs =
-                List.from(
-                  snapshot
-                      .data!
-                      .docs,
+                List<QueryDocumentSnapshot> docs = List.from(
+                  snapshot.data!.docs,
                 );
 
                 // ═══════════════════════════════════════════════
                 // 🎭 MOOD FILTER
                 // ═══════════════════════════════════════════════
 
-                if (_selectedMood !=
-                    null) {
+                if (_selectedMood != null) {
                   docs =
-                      docs.where(
-                            (doc) {
-                          final data =
-                          doc.data()
-                          as Map<
-                              String,
-                              dynamic
-                          >;
+                      docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
 
-                          final mood =
-                          (data['mood'] ??
-                              'neutral')
-                              .toString()
-                              .toLowerCase();
+                        final mood =
+                            (data['mood'] ?? 'neutral')
+                                .toString()
+                                .toLowerCase();
 
-                          return mood ==
-                              _selectedMood;
-                        },
-                      ).toList();
+                        return mood == _selectedMood;
+                      }).toList();
                 }
 
                 // ═══════════════════════════════════════════════
                 // ↕️ SORTING
                 // ═══════════════════════════════════════════════
 
-                docs.sort(
-                      (a, b) {
-                    final aDate =
-                    a['date']
-                    as Timestamp;
+                docs.sort((a, b) {
+                  final aDate = a['date'] as Timestamp;
 
-                    final bDate =
-                    b['date']
-                    as Timestamp;
+                  final bDate = b['date'] as Timestamp;
 
-                    return _sortType ==
-                        'date_asc'
-                        ? aDate.compareTo(
-                      bDate,
-                    )
-                        : bDate.compareTo(
-                      aDate,
-                    );
-                  },
-                );
+                  return _sortType == 'date_asc'
+                      ? aDate.compareTo(bDate)
+                      : bDate.compareTo(aDate);
+                });
 
                 // ═══════════════════════════════════════════════
                 // 🔎 FILTER RETURNED NOTHING
@@ -483,10 +381,8 @@ class _NotesScreenState extends State<NotesScreen> {
                 if (docs.isEmpty) {
                   return NotesEmptyState(
                     primary: primary,
-                    title:
-                    'No memories found',
-                    subtitle:
-                    'There are no diary entries for this mood yet.',
+                    title: 'No memories found',
+                    subtitle: 'There are no diary entries for this mood yet.',
                   );
                 }
 
@@ -495,158 +391,86 @@ class _NotesScreenState extends State<NotesScreen> {
                 // ═══════════════════════════════════════════════
 
                 return AnimatedSwitcher(
-                  duration:
-                  const Duration(
-                    milliseconds:
-                    300,
-                  ),
+                  duration: const Duration(milliseconds: 300),
 
-                  child:
-                  ListView.builder(
-                    key: ValueKey(
-                      '$_sortType-${_selectedMood ?? "all"}',
-                    ),
+                  child: ListView.builder(
+                    key: ValueKey('$_sortType-${_selectedMood ?? "all"}'),
 
-                    padding:
-                    const EdgeInsets
-                        .fromLTRB(
-                      16,
-                      4,
-                      16,
-                      30,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 30),
 
-                    itemCount:
-                    docs.length,
+                    itemCount: docs.length,
 
-                    itemBuilder:
-                        (
-                        context,
-                        index,
-                        ) {
-                      final data =
-                      docs[index]
-                          .data()
-                      as Map<
-                          String,
-                          dynamic
-                      >;
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data() as Map<String, dynamic>;
 
                       // ─────────────────────────────────────────
                       // 📅 DATE
                       // ─────────────────────────────────────────
 
-                      final date =
-                      (data['date']
-                      as Timestamp)
-                          .toDate();
+                      final date = (data['date'] as Timestamp).toDate();
 
-                      final currentGroup =
-                      _groupTitle(
-                        date,
-                      );
+                      final currentGroup = _groupTitle(date);
 
-                      String?
-                      previousGroup;
+                      String? previousGroup;
 
                       if (index > 0) {
                         final previousData =
-                        docs[index - 1]
-                            .data()
-                        as Map<
-                            String,
-                            dynamic
-                        >;
+                            docs[index - 1].data() as Map<String, dynamic>;
 
                         final prevDate =
-                        (previousData['date']
-                        as Timestamp)
-                            .toDate();
+                            (previousData['date'] as Timestamp).toDate();
 
-                        previousGroup =
-                            _groupTitle(
-                              prevDate,
-                            );
+                        previousGroup = _groupTitle(prevDate);
                       }
 
                       // ═════════════════════════════════════════
                       // 🔥 FIRESTORE → NOTE MODEL
                       // ═════════════════════════════════════════
 
-                      final note =
-                      Note(
-                        id:
-                        docs[index]
-                            .id,
+                      final note = Note(
+                        id: docs[index].id,
 
-                        title:
-                        data['title'],
+                        title: data['title'],
 
-                        content:
-                        data['content'] ??
-                            '',
+                        content: data['content'] ?? '',
 
                         date: date,
 
-                        mood:
-                        data['mood'] ??
-                            'neutral',
+                        mood: data['mood'] ?? 'neutral',
 
-                        imagePath:
-                        data['imagePath'],
+                        imagePath: data['imagePath'],
 
-                        drawingPaths:
-                        List<
-                            String
-                        >.from(
-                          data['drawingPaths'] ??
-                              [],
+                        drawingPaths: List<String>.from(
+                          data['drawingPaths'] ?? [],
                         ),
 
-                        status:
-                        data['status'],
+                        status: data['status'],
                       );
 
                       return Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
                         children: [
                           // ═════════════════════════════════════
                           // 📅 GROUP HEADER
                           // ═════════════════════════════════════
-
-                          if (index ==
-                              0 ||
-                              currentGroup !=
-                                  previousGroup)
+                          if (index == 0 || currentGroup != previousGroup)
                             NoteGroupTimelineHeader(
-                              title:
-                              currentGroup,
-                              primary:
-                              primary,
+                              title: currentGroup,
+                              primary: primary,
                             ),
 
                           // ═════════════════════════════════════
                           // 📖 DIARY CARD
                           // ═════════════════════════════════════
-
                           SizedBox(
-                            width:
-                            double
-                                .infinity,
+                            width: double.infinity,
 
-                            child:
-                            DiaryCard(
-                              note:
-                              note,
+                            child: DiaryCard(
+                              note: note,
 
-                              refreshCallback:
-                                  (_) {
-                                setState(
-                                      () {},
-                                );
+                              refreshCallback: (_) {
+                                setState(() {});
                               },
                             ),
                           ),
@@ -686,8 +510,7 @@ class _NotesScreenState extends State<NotesScreen> {
       world: selectedWorld,
       scene: DiaryScene.notes,
       accentColor: primary,
-      brightness:
-      theme.brightness,
+      brightness: theme.brightness,
       child: screen,
     );
   }

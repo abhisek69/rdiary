@@ -2,7 +2,7 @@ name: rdiary
 description: "diary"
 publish_to: 'none'
 
-version: 0.6.0+6
+version: 0.6.5+65
 
 environment:
   sdk: ^3.7.2
