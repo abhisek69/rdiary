@@ -75,6 +75,87 @@ class NotificationService {
     return granted ?? false;
   }
 
+  // ============================================================
+  // INSTANT NOTIFICATION (TEST)
+  // ============================================================
+
+  static Future<void> showWelcomeNotification() async {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'rdiary_welcome_channel',
+        'Welcome Notifications',
+        channelDescription: 'Greetings when you open the app',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+    );
+
+    await _notificationsPlugin.show(
+      999,
+      'Welcome Back! 💜',
+      'It\'s great to see you again. Let\'s make today productive!',
+      details,
+    );
+    debugPrint('🚀 Welcome notification triggered.');
+  }
+
+  // ============================================================
+  // 5-MINUTE TEST GOAL REMINDER
+  // ============================================================
+
+  static Future<void> scheduleTestGoalReminder5Min() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('❌ Test Goal: No user logged in.');
+        return;
+      }
+
+      final goalsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('goals')
+          .where('isCompleted', isEqualTo: false)
+          .limit(1)
+          .get();
+
+      String goalName = 'your goals';
+      if (goalsSnapshot.docs.isNotEmpty) {
+        goalName = goalsSnapshot.docs.first.data()['title'] ?? 'your goal';
+      }
+
+      final now = tz.TZDateTime.now(tz.local);
+
+      // Schedule 6 notifications, each 5 minutes apart (covers next 30 mins)
+      for (int i = 1; i <= 6; i++) {
+        final scheduledTime = now.add(Duration(minutes: 5 * i));
+
+        await _notificationsPlugin.zonedSchedule(
+          888 + i,
+          'Goal Reminder (Test $i) 🎯',
+          'Don\'t forget: $goalName',
+          scheduledTime,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'rdiary_test_channel_v3',
+              'Test Notifications',
+              channelDescription: 'Testing 5-minute reminders',
+              importance: Importance.max,
+              priority: Priority.high,
+              showWhen: true,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+        debugPrint('🔔 Test reminder $i scheduled for: $scheduledTime');
+      }
+    } catch (e) {
+      debugPrint('❌ Test goal reminder failed: $e');
+    }
+  }
+
   // ############################################################
   //
   //                     GOAL REMINDERS

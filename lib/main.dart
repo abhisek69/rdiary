@@ -36,6 +36,9 @@ Future<void> main() async {
 
   final exactAllowed = await NotificationService.requestExactAlarmPermission();
 
+  // Trigger Instant Welcome Notification
+  await NotificationService.showWelcomeNotification();
+
   // ============================================================
   // START APP
   // ============================================================
@@ -54,6 +57,9 @@ Future<void> main() async {
   // BUILD NOTIFICATION SCHEDULE
   // ============================================================
 
+  // We wait a bit for Firebase Auth to potentially restore session
+  await Future.delayed(const Duration(seconds: 2));
+
   if (exactAllowed) {
     debugPrint('🚀 Building RDiary notification schedule...');
 
@@ -62,6 +68,9 @@ Future<void> main() async {
 
     // Diary reminders
     await NotificationService.scheduleUpcomingDiaryReminders(daysAhead: 7);
+
+    // Test 5-minute reminder
+    await NotificationService.scheduleTestGoalReminder5Min();
   } else {
     debugPrint('❌ Exact alarm permission missing.');
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/notification_service.dart';
 import 'home.dart';
 import '../settings/settings.dart';
 import '../goals/goals_screen.dart';
@@ -43,6 +44,26 @@ class _MainScreenState extends State<MainScreen> {
       const GoalsScreen(),
       const SettingsScreen(),
     ];
+
+    // Build notification schedule when main screen is reached.
+    _buildNotificationSchedule();
+  }
+
+  Future<void> _buildNotificationSchedule() async {
+    try {
+      debugPrint('🚀 [MainScreen] Refreshing notification schedule...');
+      
+      // Goal reminders
+      await NotificationService.scheduleUpcomingGoalReminders(daysAhead: 7);
+
+      // Diary reminders
+      await NotificationService.scheduleUpcomingDiaryReminders(daysAhead: 7);
+      
+      // Test 5-minute reminder
+      await NotificationService.scheduleTestGoalReminder5Min();
+    } catch (e) {
+      debugPrint('❌ [MainScreen] Notification scheduling failed: $e');
+    }
   }
 
   // ============================================================
