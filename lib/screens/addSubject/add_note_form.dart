@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';   // ✅ correct
+import 'dart:typed_data'; // ✅ correct
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,7 +12,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../widgets/mood_selector.dart';
-
 
 class AddNoteForm extends StatefulWidget {
   final DateTime? selectedDate;
@@ -133,21 +132,20 @@ class _AddNoteFormState extends State<AddNoteForm> {
           .collection('notes')
           .doc(id)
           .set({
-        'title': _titleController.text.isEmpty
-            ? null
-            : _titleController.text,
-        'content': _contentController.text,
-        'date': Timestamp.fromDate(
-          DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day,
-          ),
-        ),
-        'mood': _selectedMood ?? "neutral",
-        'images': imageUrls,
-        'createdAt': Timestamp.now(),
-      });
+            'title':
+                _titleController.text.isEmpty ? null : _titleController.text,
+            'content': _contentController.text,
+            'date': Timestamp.fromDate(
+              DateTime(
+                _selectedDate.year,
+                _selectedDate.month,
+                _selectedDate.day,
+              ),
+            ),
+            'mood': _selectedMood ?? "neutral",
+            'images': imageUrls,
+            'createdAt': Timestamp.now(),
+          });
 
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +157,6 @@ class _AddNoteFormState extends State<AddNoteForm> {
       );
 
       Get.back();
-
     } catch (e) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,7 +170,6 @@ class _AddNoteFormState extends State<AddNoteForm> {
       setState(() => _isUploading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +210,7 @@ class _AddNoteFormState extends State<AddNoteForm> {
           ),
 
           const SizedBox(height: 20),
- //TODO add photos
+          //TODO add photos
           // const Text(
           //   "Add Photos (Max 3)",
           //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

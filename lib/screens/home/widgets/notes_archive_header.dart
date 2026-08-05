@@ -3,15 +3,9 @@ import 'package:flutter/material.dart';
 class NotesArchiveHeader extends StatelessWidget {
   final Color primary;
 
-  const NotesArchiveHeader({
-    super.key,
-    required this.primary,
-  });
+  const NotesArchiveHeader({super.key, required this.primary});
 
-  Widget _star(
-    Color color,
-    double size,
-  ) {
+  Widget _star(Color color, double size) {
     return Container(
       width: size,
       height: size,
@@ -42,18 +36,14 @@ class NotesArchiveHeader extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           // 🌌 Glass effect
-          color: isDark
-              ? Colors.black.withOpacity(0.38)
-              : theme.colorScheme.surface,
-          border: Border.all(
-            color: primary.withOpacity(0.32),
-            width: 1.1,
-          ),
+          color:
+              isDark
+                  ? Colors.black.withOpacity(0.38)
+                  : theme.colorScheme.surface,
+          border: Border.all(color: primary.withOpacity(0.32), width: 1.1),
           boxShadow: [
             BoxShadow(
-              color: primary.withOpacity(
-                isDark ? 0.15 : 0.08,
-              ),
+              color: primary.withOpacity(isDark ? 0.15 : 0.08),
               blurRadius: 25,
               spreadRadius: 1,
             ),
@@ -89,16 +79,8 @@ class NotesArchiveHeader extends StatelessWidget {
             // ✨ DECORATIVE STARS
             // ═══════════════════════════════════════════════════
             if (isDark) ...[
-              Positioned(
-                right: 5,
-                top: 4,
-                child: _star(primary, 5),
-              ),
-              Positioned(
-                right: 31,
-                top: 27,
-                child: _star(Colors.white, 3),
-              ),
+              Positioned(right: 5, top: 4, child: _star(primary, 5)),
+              Positioned(right: 31, top: 27, child: _star(Colors.white, 3)),
               Positioned(
                 right: 10,
                 bottom: 4,
@@ -120,9 +102,7 @@ class NotesArchiveHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: primary.withOpacity(0.12),
-                    border: Border.all(
-                      color: primary.withOpacity(0.55),
-                    ),
+                    border: Border.all(color: primary.withOpacity(0.55)),
                     boxShadow: [
                       BoxShadow(
                         color: primary.withOpacity(0.28),
@@ -152,7 +132,10 @@ class NotesArchiveHeader extends StatelessWidget {
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.2,
-                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
+                          color:
+                              isDark
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -161,9 +144,12 @@ class NotesArchiveHeader extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.35,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.60)
-                              : theme.colorScheme.onSurface.withOpacity(0.60),
+                          color:
+                              isDark
+                                  ? Colors.white.withOpacity(0.60)
+                                  : theme.colorScheme.onSurface.withOpacity(
+                                    0.60,
+                                  ),
                         ),
                       ),
                     ],

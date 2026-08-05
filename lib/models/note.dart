@@ -29,9 +29,10 @@ class Note {
       content: data['content'],
       date: (data['date'] as Timestamp).toDate(),
       imagePath: data['imagePath'],
-      drawingPaths: data['drawingPaths'] != null
-          ? List<String>.from(data['drawingPaths'])
-          : [],
+      drawingPaths:
+          data['drawingPaths'] != null
+              ? List<String>.from(data['drawingPaths'])
+              : [],
       mood: data['mood'],
       status: data['status'],
     );

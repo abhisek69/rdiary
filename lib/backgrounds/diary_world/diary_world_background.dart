@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
+
 import 'diary_world.dart';
-import 'cosmic_world.dart';
+import 'cosmic/cosmic_world.dart';
 
 /// ═════════════════════════════════════════════════════════════════
 /// 🌍 DIARY WORLD BACKGROUND
 ///
-/// The main orchestrator for app backgrounds. It decides which
-/// "World" to render based on user settings or defaults.
+/// Central background router for RDiary.
+///
+/// Available:
+/// • Theme-less
+/// • Cosmic Universe
+///
+/// Coming later:
+/// • Moonlight Ocean
+/// • Forest Fireflies
+/// • Butterfly Garden
+/// • Rainy Street
 /// ═════════════════════════════════════════════════════════════════
 
 class DiaryWorldBackground extends StatelessWidget {
@@ -14,27 +24,56 @@ class DiaryWorldBackground extends StatelessWidget {
   final DiaryWorld world;
   final DiaryScene scene;
   final Color accentColor;
+  final Brightness? brightness;
 
   const DiaryWorldBackground({
     super.key,
     required this.child,
-    this.world = DiaryWorld.cosmic, // Default to cosmic as it's the current theme
+    this.world = DiaryWorld.cosmicUniverse,
     required this.scene,
     required this.accentColor,
+    this.brightness,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBrightness =
+        brightness ?? Theme.of(context).brightness;
+
     switch (world) {
+    // ─────────────────────────────────────────────────────────
+    // THEME-LESS
+    // ─────────────────────────────────────────────────────────
       case DiaryWorld.simple:
         return _SimpleWorldBackground(
-          scene: scene,
+          brightness: effectiveBrightness,
           child: child,
         );
-      case DiaryWorld.cosmic:
+
+    // ─────────────────────────────────────────────────────────
+    // COSMIC UNIVERSE
+    // ─────────────────────────────────────────────────────────
+      case DiaryWorld.cosmicUniverse:
         return CosmicWorldBackground(
           accentColor: accentColor,
           scene: scene,
+          brightness: effectiveBrightness,
+          child: child,
+        );
+
+    // ─────────────────────────────────────────────────────────
+    // COMING SOON WORLDS
+    //
+    // Until these are implemented, safely fall back to Cosmic.
+    // ─────────────────────────────────────────────────────────
+      case DiaryWorld.moonlightOcean:
+      case DiaryWorld.forestFireflies:
+      case DiaryWorld.butterflyGarden:
+      case DiaryWorld.rainyStreet:
+        return CosmicWorldBackground(
+          accentColor: accentColor,
+          scene: scene,
+          brightness: effectiveBrightness,
           child: child,
         );
     }
@@ -42,26 +81,25 @@ class DiaryWorldBackground extends StatelessWidget {
 }
 
 /// ═════════════════════════════════════════════════════════════════
-/// ⚪ SIMPLE WORLD BACKGROUND
+/// ⚪ THEME-LESS BACKGROUND
 ///
-/// A clean, minimal background for users who prefer focus.
+/// Removes all special world effects and uses the normal Flutter
+/// scaffold background.
 /// ═════════════════════════════════════════════════════════════════
 
 class _SimpleWorldBackground extends StatelessWidget {
-  final DiaryScene scene;
+  final Brightness brightness;
   final Widget child;
 
   const _SimpleWorldBackground({
-    required this.scene,
+    required this.brightness,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      color: theme.scaffoldBackgroundColor,
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: child,
     );
   }

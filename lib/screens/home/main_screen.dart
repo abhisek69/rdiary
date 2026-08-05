@@ -8,10 +8,7 @@ import 'notes_screen.dart';
 class MainScreen extends StatefulWidget {
   final DateTime? initialDate;
 
-  const MainScreen({
-    super.key,
-    this.initialDate,
-  });
+  const MainScreen({super.key, this.initialDate});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -36,16 +33,12 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
 
-    _pageController = PageController(
-      initialPage: _currentIndex,
-    );
+    _pageController = PageController(initialPage: _currentIndex);
 
     // IMPORTANT:
     // Pass the initial date through to HomeScreen.
     _screens = [
-      HomeScreen(
-        initialDate: widget.initialDate,
-      ),
+      HomeScreen(initialDate: widget.initialDate),
       const NotesScreen(),
       const GoalsScreen(),
       const SettingsScreen(),
@@ -75,9 +68,7 @@ class _MainScreenState extends State<MainScreen> {
 
     _pageController.animateToPage(
       index,
-      duration: const Duration(
-        milliseconds: 300,
-      ),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
@@ -94,14 +85,12 @@ class _MainScreenState extends State<MainScreen> {
 
     final primary = colors.primary;
 
-    final isDark =
-        theme.brightness == Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       // ========================================================
       // BODY
       // ========================================================
-
       body: PageView(
         controller: _pageController,
 
@@ -119,14 +108,10 @@ class _MainScreenState extends State<MainScreen> {
       // ========================================================
       // BOTTOM NAVIGATION
       // ========================================================
-
-      bottomNavigationBar: isDark
-          ? _buildCosmicNavigation(
-        primary,
-      )
-          : _buildLightNavigation(
-        primary,
-      ),
+      bottomNavigationBar:
+          isDark
+              ? _buildCosmicNavigation(primary)
+              : _buildLightNavigation(primary),
     );
   }
 
@@ -134,19 +119,14 @@ class _MainScreenState extends State<MainScreen> {
   // DARK MODE COSMIC NAVIGATION
   // ============================================================
 
-  Widget _buildCosmicNavigation(
-      Color primary,
-      ) {
+  Widget _buildCosmicNavigation(Color primary) {
     return Container(
       decoration: BoxDecoration(
         // Deep neutral cosmic surface.
         color: const Color(0xFF09090D),
 
         border: Border(
-          top: BorderSide(
-            color: primary.withOpacity(0.45),
-            width: 1,
-          ),
+          top: BorderSide(color: primary.withOpacity(0.45), width: 1),
         ),
 
         boxShadow: [
@@ -212,9 +192,7 @@ class _MainScreenState extends State<MainScreen> {
   // LIGHT MODE NAVIGATION
   // ============================================================
 
-  Widget _buildLightNavigation(
-      Color primary,
-      ) {
+  Widget _buildLightNavigation(Color primary) {
     return BottomNavigationBar(
       currentIndex: _currentIndex,
 
@@ -226,35 +204,23 @@ class _MainScreenState extends State<MainScreen> {
 
       selectedItemColor: Colors.white,
 
-      unselectedItemColor:
-      Colors.white.withOpacity(0.72),
+      unselectedItemColor: Colors.white.withOpacity(0.72),
 
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(
-            Icons.home_rounded,
-          ),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
 
         BottomNavigationBarItem(
-          icon: Icon(
-            Icons.menu_book_rounded,
-          ),
+          icon: Icon(Icons.menu_book_rounded),
           label: 'Notes',
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(
-            Icons.bar_chart_rounded,
-          ),
+          icon: Icon(Icons.bar_chart_rounded),
           label: 'Goals',
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(
-            Icons.settings_rounded,
-          ),
+          icon: Icon(Icons.settings_rounded),
           label: 'Settings',
         ),
       ],
@@ -288,8 +254,7 @@ class _CosmicNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected =
-        index == currentIndex;
+    final selected = index == currentIndex;
 
     return Expanded(
       child: InkWell(
@@ -297,46 +262,35 @@ class _CosmicNavItem extends StatelessWidget {
           onTap(index);
         },
 
-        splashColor:
-        primary.withOpacity(0.10),
+        splashColor: primary.withOpacity(0.10),
 
-        highlightColor:
-        Colors.transparent,
+        highlightColor: Colors.transparent,
 
         child: AnimatedContainer(
-          duration: const Duration(
-            milliseconds: 250,
-          ),
+          duration: const Duration(milliseconds: 250),
 
           curve: Curves.easeOut,
 
-          margin: const EdgeInsets.symmetric(
-            horizontal: 3,
-            vertical: 5,
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
 
           decoration: BoxDecoration(
-            borderRadius:
-            BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18),
 
-            color: selected
-                ? primary.withOpacity(0.14)
-                : Colors.transparent,
+            color: selected ? primary.withOpacity(0.14) : Colors.transparent,
 
-            boxShadow: selected
-                ? [
-              BoxShadow(
-                color:
-                primary.withOpacity(0.20),
-                blurRadius: 15,
-              ),
-            ]
-                : null,
+            boxShadow:
+                selected
+                    ? [
+                      BoxShadow(
+                        color: primary.withOpacity(0.20),
+                        blurRadius: 15,
+                      ),
+                    ]
+                    : null,
           ),
 
           child: Column(
-            mainAxisAlignment:
-            MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
 
             children: [
               Icon(
@@ -344,22 +298,17 @@ class _CosmicNavItem extends StatelessWidget {
 
                 size: selected ? 25 : 23,
 
-                color: selected
-                    ? primary
-                    : Colors.white.withOpacity(
-                  0.55,
-                ),
+                color: selected ? primary : Colors.white.withOpacity(0.55),
 
-                shadows: selected
-                    ? [
-                  Shadow(
-                    color: primary.withOpacity(
-                      0.65,
-                    ),
-                    blurRadius: 12,
-                  ),
-                ]
-                    : null,
+                shadows:
+                    selected
+                        ? [
+                          Shadow(
+                            color: primary.withOpacity(0.65),
+                            blurRadius: 12,
+                          ),
+                        ]
+                        : null,
               ),
 
               const SizedBox(height: 2),
@@ -370,15 +319,9 @@ class _CosmicNavItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
 
-                  fontWeight: selected
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
 
-                  color: selected
-                      ? primary
-                      : Colors.white.withOpacity(
-                    0.50,
-                  ),
+                  color: selected ? primary : Colors.white.withOpacity(0.50),
                 ),
               ),
             ],

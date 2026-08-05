@@ -14,14 +14,11 @@ class CalendarSection extends StatefulWidget {
   });
 
   @override
-  State<CalendarSection> createState() =>
-      _CalendarSectionState();
+  State<CalendarSection> createState() => _CalendarSectionState();
 }
 
-class _CalendarSectionState
-    extends State<CalendarSection>
+class _CalendarSectionState extends State<CalendarSection>
     with SingleTickerProviderStateMixin {
-
   bool _isExpanded = true;
 
   @override
@@ -32,16 +29,9 @@ class _CalendarSectionState
     final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        12,
-        12,
-        0,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: AnimatedContainer(
-        duration: const Duration(
-          milliseconds: 300,
-        ),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
 
         decoration: BoxDecoration(
@@ -50,31 +40,23 @@ class _CalendarSectionState
           // ======================================================
           // GLASS / NORMAL SURFACE
           // ======================================================
-
-          color: isDark
-              ? Colors.black.withOpacity(0.48)
-              : surface,
+          color: isDark ? Colors.black.withOpacity(0.48) : surface,
 
           // ======================================================
           // PRIMARY COLOR BORDER
           // ======================================================
-
           border: Border.all(
-            color: isDark
-                ? primary.withOpacity(0.75)
-                : primary.withOpacity(0.8),
+            color:
+                isDark ? primary.withOpacity(0.75) : primary.withOpacity(0.8),
             width: isDark ? 1.2 : 1.5,
           ),
 
           // ======================================================
           // COSMIC GLOW
           // ======================================================
-
           boxShadow: [
             BoxShadow(
-              color: primary.withOpacity(
-                isDark ? 0.22 : 0.25,
-              ),
+              color: primary.withOpacity(isDark ? 0.22 : 0.25),
               blurRadius: isDark ? 30 : 25,
               spreadRadius: isDark ? 1 : 2,
             ),
@@ -92,7 +74,6 @@ class _CalendarSectionState
                 // ==================================================
                 // HEADER
                 // ==================================================
-
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
 
@@ -103,8 +84,7 @@ class _CalendarSectionState
                   },
 
                   child: Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                     children: [
                       Row(
@@ -112,28 +92,27 @@ class _CalendarSectionState
                           // ------------------------------------------
                           // CALENDAR ICON
                           // ------------------------------------------
-
                           Container(
                             width: 34,
                             height: 34,
 
                             decoration: BoxDecoration(
-                              borderRadius:
-                              BorderRadius.circular(9),
+                              borderRadius: BorderRadius.circular(9),
 
-                              color: isDark
-                                  ? primary.withOpacity(0.15)
-                                  : primary.withOpacity(0.10),
+                              color:
+                                  isDark
+                                      ? primary.withOpacity(0.15)
+                                      : primary.withOpacity(0.10),
 
-                              boxShadow: isDark
-                                  ? [
-                                BoxShadow(
-                                  color: primary
-                                      .withOpacity(0.22),
-                                  blurRadius: 12,
-                                ),
-                              ]
-                                  : null,
+                              boxShadow:
+                                  isDark
+                                      ? [
+                                        BoxShadow(
+                                          color: primary.withOpacity(0.22),
+                                          blurRadius: 12,
+                                        ),
+                                      ]
+                                      : null,
                             ),
 
                             child: Icon(
@@ -150,9 +129,7 @@ class _CalendarSectionState
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
-                              color: isDark
-                                  ? Colors.white
-                                  : primary,
+                              color: isDark ? Colors.white : primary,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -162,12 +139,9 @@ class _CalendarSectionState
                       // --------------------------------------------
                       // COLLAPSE BUTTON
                       // --------------------------------------------
-
                       AnimatedRotation(
                         turns: _isExpanded ? 0.5 : 0,
-                        duration: const Duration(
-                          milliseconds: 300,
-                        ),
+                        duration: const Duration(milliseconds: 300),
                         child: Icon(
                           Icons.expand_more_rounded,
                           color: primary,
@@ -181,33 +155,27 @@ class _CalendarSectionState
                 // ==================================================
                 // CALENDAR
                 // ==================================================
-
                 AnimatedCrossFade(
-                  duration: const Duration(
-                    milliseconds: 300,
-                  ),
+                  duration: const Duration(milliseconds: 300),
 
-                  crossFadeState: _isExpanded
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
+                  crossFadeState:
+                      _isExpanded
+                          ? CrossFadeState.showFirst
+                          : CrossFadeState.showSecond,
 
                   firstChild: Column(
                     children: [
                       const SizedBox(height: 12),
 
                       DiaryCalendar(
-                        selectedDay:
-                        widget.selectedDay,
-                        focusedDay:
-                        widget.focusedDay,
-                        onDaySelected:
-                        widget.onDaySelected,
+                        selectedDay: widget.selectedDay,
+                        focusedDay: widget.focusedDay,
+                        onDaySelected: widget.onDaySelected,
                       ),
                     ],
                   ),
 
-                  secondChild:
-                  const SizedBox.shrink(),
+                  secondChild: const SizedBox.shrink(),
                 ),
               ],
             ),

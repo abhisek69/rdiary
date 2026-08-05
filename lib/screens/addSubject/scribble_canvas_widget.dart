@@ -6,19 +6,13 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 class ScribbleCanvasWidget extends StatefulWidget {
   final Function(Uint8List?) onImageExported;
 
-  const ScribbleCanvasWidget({
-    super.key,
-    required this.onImageExported,
-  });
+  const ScribbleCanvasWidget({super.key, required this.onImageExported});
 
   @override
-  State<ScribbleCanvasWidget> createState() =>
-      _ScribbleCanvasWidgetState();
+  State<ScribbleCanvasWidget> createState() => _ScribbleCanvasWidgetState();
 }
 
-class _ScribbleCanvasWidgetState
-    extends State<ScribbleCanvasWidget> {
-
+class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
   late ScribbleNotifier _notifier;
 
   double _strokeWidth = 4;
@@ -52,34 +46,35 @@ class _ScribbleCanvasWidgetState
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Pick Color"),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: tempColor,
-            enableAlpha: false,
-            onColorChanged: (color) {
-              tempColor = color;
-            },
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Pick Color"),
+            content: SingleChildScrollView(
+              child: ColorPicker(
+                pickerColor: tempColor,
+                enableAlpha: false,
+                onColorChanged: (color) {
+                  tempColor = color;
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _currentColor = tempColor;
+                  });
+                  _notifier.setColor(tempColor);
+                  Navigator.pop(context);
+                },
+                child: const Text("Select"),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _currentColor = tempColor;
-              });
-              _notifier.setColor(tempColor);
-              Navigator.pop(context);
-            },
-            child: const Text("Select"),
-          ),
-        ],
-      ),
     );
   }
 
@@ -94,58 +89,45 @@ class _ScribbleCanvasWidgetState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final canvasColor =
-    isDark ? Colors.grey.shade900 : Colors.white;
+    final canvasColor = isDark ? Colors.grey.shade900 : Colors.white;
 
-    final borderColor =
-    isDark ? Colors.white24 : theme.colorScheme.primary;
+    final borderColor = isDark ? Colors.white24 : theme.colorScheme.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         /// Toolbar
         Row(
-          mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
               "Draw Something",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.undo),
-                  onPressed:
-                  _notifier.canUndo ? _notifier.undo : null,
+                  onPressed: _notifier.canUndo ? _notifier.undo : null,
                 ),
                 IconButton(
                   icon: const Icon(Icons.redo),
-                  onPressed:
-                  _notifier.canRedo ? _notifier.redo : null,
+                  onPressed: _notifier.canRedo ? _notifier.redo : null,
                 ),
                 IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: _notifier.clear,
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.color_lens,
-                    color: _currentColor,
-                  ),
+                  icon: Icon(Icons.color_lens, color: _currentColor),
                   onPressed: _openColorPicker,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.check_circle,
-                      color: Colors.green),
+                  icon: const Icon(Icons.check_circle, color: Colors.green),
                   onPressed: _exportDrawing,
                 ),
               ],
-            )
+            ),
           ],
         ),
 
@@ -178,18 +160,12 @@ class _ScribbleCanvasWidgetState
           height: 300,
           decoration: BoxDecoration(
             color: canvasColor,
-            borderRadius:
-            BorderRadius.circular(14),
-            border: Border.all(
-              color: borderColor,
-            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor),
           ),
           child: ClipRRect(
-            borderRadius:
-            BorderRadius.circular(14),
-            child: Scribble(
-              notifier: _notifier,
-            ),
+            borderRadius: BorderRadius.circular(14),
+            child: Scribble(notifier: _notifier),
           ),
         ),
       ],

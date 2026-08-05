@@ -36,7 +36,6 @@ class NotesSection extends StatelessWidget {
         // In cosmic mode we use a tiny glowing accent dot so
         // Notes visually belongs to the same system as Goals.
         // ═══════════════════════════════════════════════════════
-
         Row(
           children: [
             if (isDark) ...[
@@ -64,9 +63,7 @@ class NotesSection extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? Colors.white
-                    : theme.colorScheme.onSurface,
+                color: isDark ? Colors.white : theme.colorScheme.onSurface,
               ),
             ),
 
@@ -75,17 +72,13 @@ class NotesSection extends StatelessWidget {
             // ─────────────────────────────────────────────────
             // Small cosmic book icon
             // ─────────────────────────────────────────────────
-
             if (isDark)
               Icon(
                 Icons.auto_stories_rounded,
                 size: 18,
                 color: primary.withOpacity(0.85),
                 shadows: [
-                  Shadow(
-                    color: primary.withOpacity(0.50),
-                    blurRadius: 8,
-                  ),
+                  Shadow(color: primary.withOpacity(0.50), blurRadius: 8),
                 ],
               ),
           ],
@@ -97,7 +90,6 @@ class NotesSection extends StatelessWidget {
         // ═══════════════════════════════════════════════════════
         // 📓 DIARY ENTRIES
         // ═══════════════════════════════════════════════════════
-
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -106,8 +98,7 @@ class NotesSection extends StatelessWidget {
 
           itemCount: notes.length,
 
-          separatorBuilder: (_, __) =>
-          const SizedBox(height: 10),
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
 
           itemBuilder: (context, index) {
             return DiaryCard(

@@ -31,20 +31,22 @@ class Goal {
       goalDays: List<String>.from(data['goalDays'] ?? []),
 
       /// ✅ Normalize startDate
-      startDate: data['startDate'] != null
-          ? _normalize((data['startDate'] as Timestamp).toDate().toLocal())
-          : null,
+      startDate:
+          data['startDate'] != null
+              ? _normalize((data['startDate'] as Timestamp).toDate().toLocal())
+              : null,
 
       /// ✅ Normalize deadline
-      deadline: data['deadline'] != null
-          ? _normalize((data['deadline'] as Timestamp).toDate().toLocal())
-          : null,
+      deadline:
+          data['deadline'] != null
+              ? _normalize((data['deadline'] as Timestamp).toDate().toLocal())
+              : null,
 
-      completedDates:
-      List<String>.from(data['completedDates'] ?? []),
+      completedDates: List<String>.from(data['completedDates'] ?? []),
 
-      createdAt:
-      _normalize((data['createdAt'] as Timestamp).toDate().toLocal()),
+      createdAt: _normalize(
+        (data['createdAt'] as Timestamp).toDate().toLocal(),
+      ),
     );
   }
 
@@ -52,12 +54,8 @@ class Goal {
     return {
       'title': title,
       'goalDays': goalDays,
-      'startDate': startDate != null
-          ? Timestamp.fromDate(startDate!)
-          : null,
-      'deadline': deadline != null
-          ? Timestamp.fromDate(deadline!)
-          : null,
+      'startDate': startDate != null ? Timestamp.fromDate(startDate!) : null,
+      'deadline': deadline != null ? Timestamp.fromDate(deadline!) : null,
       'completedDates': completedDates,
       'createdAt': Timestamp.fromDate(createdAt),
     };

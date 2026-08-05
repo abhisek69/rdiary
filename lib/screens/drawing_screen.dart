@@ -37,7 +37,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
   }
 
   Future<void> _initController() async {
-    final whiteImage = await _createWhiteImage(1000,1000);
+    final whiteImage = await _createWhiteImage(1000, 1000);
 
     setState(() {
       _controller =
@@ -57,9 +57,9 @@ class _DrawingScreenState extends State<DrawingScreen> {
       final renderBox =
           _painterKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to get canvas size')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to get canvas size')),
+        );
         return;
       }
 

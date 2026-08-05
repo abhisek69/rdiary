@@ -15,7 +15,7 @@ class NotificationService {
   // ============================================================
 
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   // ============================================================
   // INITIALIZATION
@@ -26,9 +26,7 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-    );
+    const initSettings = InitializationSettings(android: androidSettings);
 
     await _notificationsPlugin.initialize(initSettings);
 
@@ -37,14 +35,10 @@ class NotificationService {
 
     // Currently RDiary uses India timezone.
     // Later this can be changed to automatic device detection.
-    tz.setLocalLocation(
-      tz.getLocation('Asia/Kolkata'),
-    );
+    tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
 
     debugPrint('🌍 Timezone: ${tz.local.name}');
-    debugPrint(
-      '🕐 RDiary time: ${tz.TZDateTime.now(tz.local)}',
-    );
+    debugPrint('🕐 RDiary time: ${tz.TZDateTime.now(tz.local)}');
   }
 
   // ============================================================
@@ -69,15 +63,14 @@ class NotificationService {
     if (!Platform.isAndroid) return true;
 
     final androidPlugin =
-    _notificationsPlugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+        _notificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
-    final granted =
-    await androidPlugin?.requestExactAlarmsPermission();
+    final granted = await androidPlugin?.requestExactAlarmsPermission();
 
-    debugPrint(
-      '⏰ Exact alarm permission: $granted',
-    );
+    debugPrint('⏰ Exact alarm permission: $granted');
 
     return granted ?? false;
   }
@@ -92,16 +85,12 @@ class NotificationService {
   // 7-DAY GOAL REMINDER ENGINE
   // ============================================================
 
-  static Future<void> scheduleUpcomingGoalReminders({
-    int daysAhead = 7,
-  }) async {
+  static Future<void> scheduleUpcomingGoalReminders({int daysAhead = 7}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
-        debugPrint(
-          '❌ Goal reminders: No logged-in user.',
-        );
+        debugPrint('❌ Goal reminders: No logged-in user.');
         return;
       }
 
@@ -114,39 +103,26 @@ class NotificationService {
       // GET USER GOALS
       // --------------------------------------------------------
 
-      final goalsSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('goals')
-          .get();
+      final goalsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('goals')
+              .get();
 
-      debugPrint(
-        '📋 Firestore goals found: ${goalsSnapshot.docs.length}',
-      );
+      debugPrint('📋 Firestore goals found: ${goalsSnapshot.docs.length}');
 
       // Remove old goal reminders before rebuilding.
       await cancelGoalReminders();
 
       if (goalsSnapshot.docs.isEmpty) {
-        debugPrint(
-          '😴 User currently has no goals.',
-        );
+        debugPrint('😴 User currently has no goals.');
         return;
       }
 
-      const dayNames = [
-        'Mon',
-        'Tue',
-        'Wed',
-        'Thu',
-        'Fri',
-        'Sat',
-        'Sun',
-      ];
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-      final now = tz.TZDateTime.now(
-        tz.local,
-      );
+      final now = tz.TZDateTime.now(tz.local);
 
       int totalScheduled = 0;
 
@@ -154,11 +130,7 @@ class NotificationService {
       // TODAY + NEXT 6 DAYS
       // --------------------------------------------------------
 
-      for (
-      int dayOffset = 0;
-      dayOffset < daysAhead;
-      dayOffset++
-      ) {
+      for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
         final targetDate = tz.TZDateTime(
           tz.local,
           now.year,
@@ -166,8 +138,7 @@ class NotificationService {
           now.day + dayOffset,
         );
 
-        final weekday =
-        dayNames[targetDate.weekday - 1];
+        final weekday = dayNames[targetDate.weekday - 1];
 
         final dateText =
             '${targetDate.year}-'
@@ -176,9 +147,7 @@ class NotificationService {
 
         debugPrint('');
         debugPrint('----------------------------------------');
-        debugPrint(
-          '📅 $dateText ($weekday)',
-        );
+        debugPrint('📅 $dateText ($weekday)');
 
         final List<String> goalsForThisDay = [];
 
@@ -189,8 +158,7 @@ class NotificationService {
         for (final goalDoc in goalsSnapshot.docs) {
           final data = goalDoc.data();
 
-          final title =
-              data['title']?.toString().trim() ?? '';
+          final title = data['title']?.toString().trim() ?? '';
 
           if (title.isEmpty) {
             continue;
@@ -200,13 +168,10 @@ class NotificationService {
           // ENTIRE GOAL COMPLETED
           // ----------------------------------------------------
 
-          final isCompleted =
-              data['isCompleted'] as bool? ?? false;
+          final isCompleted = data['isCompleted'] as bool? ?? false;
 
           if (isCompleted) {
-            debugPrint(
-              '✅ "$title" skipped — entire goal completed.',
-            );
+            debugPrint('✅ "$title" skipped — entire goal completed.');
             continue;
           }
 
@@ -214,9 +179,7 @@ class NotificationService {
           // WEEKDAY CHECK
           // ----------------------------------------------------
 
-          final goalDays = List<String>.from(
-            data['goalDays'] ?? [],
-          );
+          final goalDays = List<String>.from(data['goalDays'] ?? []);
 
           if (!goalDays.contains(weekday)) {
             continue;
@@ -232,21 +195,14 @@ class NotificationService {
           // START DATE CHECK
           // ----------------------------------------------------
 
-          final startTimestamp =
-          data['startDate'] as Timestamp?;
+          final startTimestamp = data['startDate'] as Timestamp?;
 
           if (startTimestamp != null) {
             final start = startTimestamp.toDate();
 
-            final startDateOnly = DateTime(
-              start.year,
-              start.month,
-              start.day,
-            );
+            final startDateOnly = DateTime(start.year, start.month, start.day);
 
-            if (targetDateOnly.isBefore(
-              startDateOnly,
-            )) {
+            if (targetDateOnly.isBefore(startDateOnly)) {
               continue;
             }
           }
@@ -255,12 +211,10 @@ class NotificationService {
           // DEADLINE CHECK
           // ----------------------------------------------------
 
-          final deadlineTimestamp =
-          data['deadline'] as Timestamp?;
+          final deadlineTimestamp = data['deadline'] as Timestamp?;
 
           if (deadlineTimestamp != null) {
-            final deadline =
-            deadlineTimestamp.toDate();
+            final deadline = deadlineTimestamp.toDate();
 
             final deadlineDateOnly = DateTime(
               deadline.year,
@@ -268,9 +222,7 @@ class NotificationService {
               deadline.day,
             );
 
-            if (targetDateOnly.isAfter(
-              deadlineDateOnly,
-            )) {
+            if (targetDateOnly.isAfter(deadlineDateOnly)) {
               continue;
             }
           }
@@ -284,30 +236,20 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (goalsForThisDay.isEmpty) {
-          debugPrint(
-            '😴 No active goals scheduled for $weekday.',
-          );
+          debugPrint('😴 No active goals scheduled for $weekday.');
           continue;
         }
 
-        debugPrint(
-          '🎯 Goals: ${goalsForThisDay.join(', ')}',
-        );
+        debugPrint('🎯 Goals: ${goalsForThisDay.join(', ')}');
 
-        final messages =
-        _generateMotivationalMessages(
-          goalsForThisDay,
-        );
+        final messages = _generateMotivationalMessages(goalsForThisDay);
 
         // ------------------------------------------------------
         // 8:30 AM — MORNING
         // ------------------------------------------------------
 
         if (await _scheduleGoalNotification(
-          id: _goalNotificationId(
-            targetDate,
-            1,
-          ),
+          id: _goalNotificationId(targetDate, 1),
           date: targetDate,
           hour: 8,
           minute: 30,
@@ -322,10 +264,7 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleGoalNotification(
-          id: _goalNotificationId(
-            targetDate,
-            2,
-          ),
+          id: _goalNotificationId(targetDate, 2),
           date: targetDate,
           hour: 13,
           minute: 0,
@@ -340,10 +279,7 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleGoalNotification(
-          id: _goalNotificationId(
-            targetDate,
-            3,
-          ),
+          id: _goalNotificationId(targetDate, 3),
           date: targetDate,
           hour: 18,
           minute: 30,
@@ -358,10 +294,7 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleGoalNotification(
-          id: _goalNotificationId(
-            targetDate,
-            4,
-          ),
+          id: _goalNotificationId(targetDate, 4),
           date: targetDate,
           hour: 21,
           minute: 30,
@@ -374,18 +307,12 @@ class NotificationService {
 
       debugPrint('');
       debugPrint('========================================');
-      debugPrint(
-        '✅ $totalScheduled goal reminders scheduled.',
-      );
+      debugPrint('✅ $totalScheduled goal reminders scheduled.');
       debugPrint('========================================');
     } catch (e, stackTrace) {
-      debugPrint(
-        '❌ Goal reminder scheduling failed: $e',
-      );
+      debugPrint('❌ Goal reminder scheduling failed: $e');
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
     }
   }
 
@@ -393,14 +320,11 @@ class NotificationService {
   // GOAL MOTIVATIONAL MESSAGE ENGINE
   // ============================================================
 
-  static Map<String, String> _generateMotivationalMessages(
-      List<String> goals,
-      ) {
+  static Map<String, String> _generateMotivationalMessages(List<String> goals) {
     final random = Random();
 
     String randomGoal() {
-      return goals[
-      random.nextInt(goals.length)];
+      return goals[random.nextInt(goals.length)];
     }
 
     final goalCount = goals.length;
@@ -526,22 +450,10 @@ class NotificationService {
     ];
 
     return {
-      'morning': morningMessages[
-      random.nextInt(
-        morningMessages.length,
-      )],
-      'midday': middayMessages[
-      random.nextInt(
-        middayMessages.length,
-      )],
-      'evening': eveningMessages[
-      random.nextInt(
-        eveningMessages.length,
-      )],
-      'night': nightMessages[
-      random.nextInt(
-        nightMessages.length,
-      )],
+      'morning': morningMessages[random.nextInt(morningMessages.length)],
+      'midday': middayMessages[random.nextInt(middayMessages.length)],
+      'evening': eveningMessages[random.nextInt(eveningMessages.length)],
+      'night': nightMessages[random.nextInt(nightMessages.length)],
     };
   }
 
@@ -557,9 +469,7 @@ class NotificationService {
     required String title,
     required String message,
   }) async {
-    final now = tz.TZDateTime.now(
-      tz.local,
-    );
+    final now = tz.TZDateTime.now(tz.local);
 
     final scheduledTime = tz.TZDateTime(
       tz.local,
@@ -574,7 +484,7 @@ class NotificationService {
     if (!scheduledTime.isAfter(now)) {
       debugPrint(
         '⏭️ Goal reminder skipped — '
-            '$scheduledTime already passed.',
+        '$scheduledTime already passed.',
       );
 
       return false;
@@ -589,25 +499,19 @@ class NotificationService {
         android: AndroidNotificationDetails(
           'rdiary_goal_reminders_v2',
           'RDiary Goal Reminders',
-          channelDescription:
-          'Motivational reminders for your goals',
+          channelDescription: 'Motivational reminders for your goals',
           importance: Importance.high,
           priority: Priority.high,
         ),
       ),
-      androidScheduleMode:
-      AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
-    debugPrint(
-      '🔔 $scheduledTime → $title',
-    );
+    debugPrint('🔔 $scheduledTime → $title');
 
-    debugPrint(
-      '💬 $message',
-    );
+    debugPrint('💬 $message');
 
     return true;
   }
@@ -616,10 +520,7 @@ class NotificationService {
   // UNIQUE GOAL NOTIFICATION ID
   // ============================================================
 
-  static int _goalNotificationId(
-      tz.TZDateTime date,
-      int slot,
-      ) {
+  static int _goalNotificationId(tz.TZDateTime date, int slot) {
     // Slot:
     // 1 = Morning
     // 2 = Midday
@@ -636,18 +537,10 @@ class NotificationService {
   // CANCEL UPCOMING GOAL REMINDERS
   // ============================================================
 
-  static Future<void> cancelGoalReminders({
-    int daysAhead = 14,
-  }) async {
-    final now = tz.TZDateTime.now(
-      tz.local,
-    );
+  static Future<void> cancelGoalReminders({int daysAhead = 14}) async {
+    final now = tz.TZDateTime.now(tz.local);
 
-    for (
-    int dayOffset = 0;
-    dayOffset < daysAhead;
-    dayOffset++
-    ) {
+    for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
       final date = tz.TZDateTime(
         tz.local,
         now.year,
@@ -655,23 +548,12 @@ class NotificationService {
         now.day + dayOffset,
       );
 
-      for (
-      int slot = 1;
-      slot <= 4;
-      slot++
-      ) {
-        await _notificationsPlugin.cancel(
-          _goalNotificationId(
-            date,
-            slot,
-          ),
-        );
+      for (int slot = 1; slot <= 4; slot++) {
+        await _notificationsPlugin.cancel(_goalNotificationId(date, slot));
       }
     }
 
-    debugPrint(
-      '🧹 Previous goal reminders cleared.',
-    );
+    debugPrint('🧹 Previous goal reminders cleared.');
   }
 
   // ############################################################
@@ -701,15 +583,11 @@ class NotificationService {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
-        debugPrint(
-          '❌ Diary reminders: No logged-in user.',
-        );
+        debugPrint('❌ Diary reminders: No logged-in user.');
         return;
       }
 
-      final now = tz.TZDateTime.now(
-        tz.local,
-      );
+      final now = tz.TZDateTime.now(tz.local);
 
       final random = Random();
 
@@ -719,9 +597,7 @@ class NotificationService {
       debugPrint('========================================');
 
       // Remove previous diary schedule before rebuilding.
-      await cancelUpcomingDiaryReminders(
-        daysAhead: 14,
-      );
+      await cancelUpcomingDiaryReminders(daysAhead: 14);
 
       int totalScheduled = 0;
 
@@ -729,11 +605,7 @@ class NotificationService {
       // TODAY + NEXT 6 DAYS
       // --------------------------------------------------------
 
-      for (
-      int dayOffset = 0;
-      dayOffset < daysAhead;
-      dayOffset++
-      ) {
+      for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
         final targetDate = tz.TZDateTime(
           tz.local,
           now.year,
@@ -748,9 +620,7 @@ class NotificationService {
 
         debugPrint('');
         debugPrint('----------------------------------------');
-        debugPrint(
-          '📖 Diary date: $dateText',
-        );
+        debugPrint('📖 Diary date: $dateText');
 
         // ------------------------------------------------------
         // CHECK TODAY'S DIARY
@@ -762,16 +632,13 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (dayOffset == 0) {
-          final hasWrittenToday =
-          await _hasDiaryEntryForDate(
+          final hasWrittenToday = await _hasDiaryEntryForDate(
             user.uid,
             targetDate,
           );
 
           if (hasWrittenToday) {
-            debugPrint(
-              '💜 Diary already written today.',
-            );
+            debugPrint('💜 Diary already written today.');
 
             continue;
           }
@@ -857,18 +724,12 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleDiaryNotification(
-          id: _diaryNotificationId(
-            targetDate,
-            1,
-          ),
+          id: _diaryNotificationId(targetDate, 1),
           date: targetDate,
           hour: 12,
           minute: 0,
           title: 'A moment for yourself 💜',
-          message: middayMessages[
-          random.nextInt(
-            middayMessages.length,
-          )],
+          message: middayMessages[random.nextInt(middayMessages.length)],
         )) {
           totalScheduled++;
         }
@@ -878,18 +739,12 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleDiaryNotification(
-          id: _diaryNotificationId(
-            targetDate,
-            2,
-          ),
+          id: _diaryNotificationId(targetDate, 2),
           date: targetDate,
           hour: 18,
           minute: 0,
           title: 'How was your day? 🌆',
-          message: eveningMessages[
-          random.nextInt(
-            eveningMessages.length,
-          )],
+          message: eveningMessages[random.nextInt(eveningMessages.length)],
         )) {
           totalScheduled++;
         }
@@ -899,18 +754,12 @@ class NotificationService {
         // ------------------------------------------------------
 
         if (await _scheduleDiaryNotification(
-          id: _diaryNotificationId(
-            targetDate,
-            3,
-          ),
+          id: _diaryNotificationId(targetDate, 3),
           date: targetDate,
           hour: 22,
           minute: 0,
           title: 'Before today ends 🌙',
-          message: nightMessages[
-          random.nextInt(
-            nightMessages.length,
-          )],
+          message: nightMessages[random.nextInt(nightMessages.length)],
         )) {
           totalScheduled++;
         }
@@ -918,18 +767,12 @@ class NotificationService {
 
       debugPrint('');
       debugPrint('========================================');
-      debugPrint(
-        '✅ $totalScheduled diary reminders scheduled.',
-      );
+      debugPrint('✅ $totalScheduled diary reminders scheduled.');
       debugPrint('========================================');
     } catch (e, stackTrace) {
-      debugPrint(
-        '❌ Diary reminder scheduling failed: $e',
-      );
+      debugPrint('❌ Diary reminder scheduling failed: $e');
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
     }
   }
 
@@ -947,39 +790,25 @@ class NotificationService {
   // ============================================================
 
   static Future<bool> _hasDiaryEntryForDate(
-      String uid,
-      tz.TZDateTime date,
-      ) async {
-    final startOfDay = DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    String uid,
+    tz.TZDateTime date,
+  ) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
 
-    final startOfNextDay = startOfDay.add(
-      const Duration(days: 1),
-    );
+    final startOfNextDay = startOfDay.add(const Duration(days: 1));
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('notes')
-        .where(
-      'date',
-      isGreaterThanOrEqualTo:
-      Timestamp.fromDate(
-        startOfDay,
-      ),
-    )
-        .where(
-      'date',
-      isLessThan:
-      Timestamp.fromDate(
-        startOfNextDay,
-      ),
-    )
-        .limit(1)
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('notes')
+            .where(
+              'date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+            )
+            .where('date', isLessThan: Timestamp.fromDate(startOfNextDay))
+            .limit(1)
+            .get();
 
     return snapshot.docs.isNotEmpty;
   }
@@ -996,9 +825,7 @@ class NotificationService {
     required String title,
     required String message,
   }) async {
-    final now = tz.TZDateTime.now(
-      tz.local,
-    );
+    final now = tz.TZDateTime.now(tz.local);
 
     final scheduledTime = tz.TZDateTime(
       tz.local,
@@ -1013,7 +840,7 @@ class NotificationService {
     if (!scheduledTime.isAfter(now)) {
       debugPrint(
         '⏭️ Diary reminder skipped — '
-            '$scheduledTime already passed.',
+        '$scheduledTime already passed.',
       );
 
       return false;
@@ -1028,25 +855,19 @@ class NotificationService {
         android: AndroidNotificationDetails(
           'rdiary_diary_reminders_v2',
           'RDiary Diary Reminders',
-          channelDescription:
-          'Gentle reminders to write your daily diary',
+          channelDescription: 'Gentle reminders to write your daily diary',
           importance: Importance.high,
           priority: Priority.high,
         ),
       ),
-      androidScheduleMode:
-      AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
-    debugPrint(
-      '📖 $scheduledTime → $title',
-    );
+    debugPrint('📖 $scheduledTime → $title');
 
-    debugPrint(
-      '💬 $message',
-    );
+    debugPrint('💬 $message');
 
     return true;
   }
@@ -1065,10 +886,7 @@ class NotificationService {
   //
   // ============================================================
 
-  static int _diaryNotificationId(
-      tz.TZDateTime date,
-      int slot,
-      ) {
+  static int _diaryNotificationId(tz.TZDateTime date, int slot) {
     return 100000000 +
         ((date.year % 100) * 1000000) +
         (date.month * 10000) +
@@ -1093,25 +911,14 @@ class NotificationService {
   // Tomorrow's reminders remain scheduled.
   // ============================================================
 
-  static Future<void> cancelDiaryRemindersForDate(
-      tz.TZDateTime date,
-      ) async {
-    for (
-    int slot = 1;
-    slot <= 3;
-    slot++
-    ) {
-      await _notificationsPlugin.cancel(
-        _diaryNotificationId(
-          date,
-          slot,
-        ),
-      );
+  static Future<void> cancelDiaryRemindersForDate(tz.TZDateTime date) async {
+    for (int slot = 1; slot <= 3; slot++) {
+      await _notificationsPlugin.cancel(_diaryNotificationId(date, slot));
     }
 
     debugPrint(
       '💜 Diary reminders cancelled for '
-          '${date.year}-${date.month}-${date.day}.',
+      '${date.year}-${date.month}-${date.day}.',
     );
   }
 
@@ -1122,18 +929,10 @@ class NotificationService {
   // Used internally whenever the 7-day schedule is rebuilt.
   // ============================================================
 
-  static Future<void> cancelUpcomingDiaryReminders({
-    int daysAhead = 14,
-  }) async {
-    final now = tz.TZDateTime.now(
-      tz.local,
-    );
+  static Future<void> cancelUpcomingDiaryReminders({int daysAhead = 14}) async {
+    final now = tz.TZDateTime.now(tz.local);
 
-    for (
-    int dayOffset = 0;
-    dayOffset < daysAhead;
-    dayOffset++
-    ) {
+    for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
       final date = tz.TZDateTime(
         tz.local,
         now.year,
@@ -1141,23 +940,12 @@ class NotificationService {
         now.day + dayOffset,
       );
 
-      for (
-      int slot = 1;
-      slot <= 3;
-      slot++
-      ) {
-        await _notificationsPlugin.cancel(
-          _diaryNotificationId(
-            date,
-            slot,
-          ),
-        );
+      for (int slot = 1; slot <= 3; slot++) {
+        await _notificationsPlugin.cancel(_diaryNotificationId(date, slot));
       }
     }
 
-    debugPrint(
-      '🧹 Previous diary reminders cleared.',
-    );
+    debugPrint('🧹 Previous diary reminders cleared.');
   }
 
   // ============================================================
@@ -1167,8 +955,6 @@ class NotificationService {
   static Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
 
-    debugPrint(
-      '🧹 All RDiary notifications cancelled.',
-    );
+    debugPrint('🧹 All RDiary notifications cancelled.');
   }
 }

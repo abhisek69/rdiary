@@ -32,33 +32,25 @@ class NotesEmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: primary.withOpacity(0.10),
-                border: Border.all(
-                  color: primary.withOpacity(0.40),
-                ),
-                boxShadow: isDark
-                    ? [
-                        BoxShadow(
-                          color: primary.withOpacity(0.20),
-                          blurRadius: 25,
-                        ),
-                      ]
-                    : null,
+                border: Border.all(color: primary.withOpacity(0.40)),
+                boxShadow:
+                    isDark
+                        ? [
+                          BoxShadow(
+                            color: primary.withOpacity(0.20),
+                            blurRadius: 25,
+                          ),
+                        ]
+                        : null,
               ),
-              child: Icon(
-                Icons.auto_stories_rounded,
-                size: 32,
-                color: primary,
-              ),
+              child: Icon(Icons.auto_stories_rounded, size: 32, color: primary),
             ),
 
             const SizedBox(height: 18),
 
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 7),
@@ -69,9 +61,10 @@ class NotesEmptyState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 height: 1.4,
-                color: isDark
-                    ? Colors.white.withOpacity(0.55)
-                    : theme.colorScheme.onSurface.withOpacity(0.60),
+                color:
+                    isDark
+                        ? Colors.white.withOpacity(0.55)
+                        : theme.colorScheme.onSurface.withOpacity(0.60),
               ),
             ),
           ],

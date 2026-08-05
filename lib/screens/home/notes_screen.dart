@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:rdiary/utils/pulseLoader.dart';
 
 import '../../models/note.dart';
@@ -10,6 +11,8 @@ import '../../widgets/mood_selector.dart';
 
 import '../../backgrounds/diary_world/diary_world.dart';
 import '../../backgrounds/diary_world/diary_world_background.dart';
+import '../../theme/app_theme.dart';
+
 import 'widgets/notes_archive_header.dart';
 import 'widgets/note_group_timeline_header.dart';
 import 'widgets/notes_empty_state.dart';
@@ -27,12 +30,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
   // ═══════════════════════════════════════════════════════════════
   // 📅 NOTE GROUP TITLE
-  //
-  // Notes are automatically separated into:
-  // Today
-  // Yesterday
-  // This Month
-  // Older months
   // ═══════════════════════════════════════════════════════════════
 
   String _groupTitle(DateTime date) {
@@ -72,22 +69,38 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 🌌 MAIN NOTES SCREEN
+  // 🌍 MAIN NOTES SCREEN
   // ═══════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
-    final theme =
-    Theme.of(context);
+    // ------------------------------------------------------------
+    // USER-SELECTED DIARY WORLD
+    // ------------------------------------------------------------
 
-    final colors =
-        theme.colorScheme;
+    final themeProvider =
+    context.watch<ThemeProvider>();
 
-    final primary =
-        colors.primary;
+    final selectedWorld =
+        themeProvider.diaryWorld;
+
+    /// Theme-less = no environmental world.
+    final worldEnabled =
+        selectedWorld != DiaryWorld.simple;
+
+    // ------------------------------------------------------------
+    // NORMAL FLUTTER THEME
+    // ------------------------------------------------------------
+
+    final theme = Theme.of(context);
+
+    final colors = theme.colorScheme;
+
+    final primary = colors.primary;
 
     final isDark =
-        theme.brightness == Brightness.dark;
+        theme.brightness ==
+            Brightness.dark;
 
     final user =
         FirebaseAuth.instance.currentUser;
@@ -109,12 +122,16 @@ class _NotesScreenState extends State<NotesScreen> {
     // ═════════════════════════════════════════════════════════════
     // 📓 NOTES SCAFFOLD
     //
-    // Transparent in dark mode so CosmicBackground can remain
-    // visible behind the entire screen.
+    // World active:
+    // Transparent so the environmental world is visible.
+    //
+    // Theme-less:
+    // Normal Flutter scaffold background.
     // ═════════════════════════════════════════════════════════════
 
     final screen = Scaffold(
-      backgroundColor: isDark
+      backgroundColor:
+      worldEnabled
           ? Colors.transparent
           : theme.scaffoldBackgroundColor,
 
@@ -136,7 +153,8 @@ class _NotesScreenState extends State<NotesScreen> {
         surfaceTintColor:
         Colors.transparent,
 
-        backgroundColor: isDark
+        backgroundColor:
+        worldEnabled
             ? Colors.transparent
             : null,
 
@@ -154,10 +172,10 @@ class _NotesScreenState extends State<NotesScreen> {
               });
             },
 
-            itemBuilder: (_) => const [
+            itemBuilder:
+                (_) => const [
               PopupMenuItem(
                 value: 'date_desc',
-
                 child: Row(
                   children: [
                     Icon(
@@ -177,7 +195,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
               PopupMenuItem(
                 value: 'date_asc',
-
                 child: Row(
                   children: [
                     Icon(
@@ -198,8 +215,9 @@ class _NotesScreenState extends State<NotesScreen> {
 
             icon: Icon(
               Icons.sort_rounded,
-
-              color: isDark
+              color:
+              worldEnabled &&
+                  isDark
                   ? primary
                   : null,
             ),
@@ -210,31 +228,27 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
 
       // ═══════════════════════════════════════════════════════════
-      // 🌌 BODY
+      // 📖 BODY
       // ═══════════════════════════════════════════════════════════
 
       body: Column(
         children: [
           // ═════════════════════════════════════════════════════
           // 🌌 MEMORY ARCHIVE HERO
+          //
+          // Only show the special environmental header while
+          // a Diary World is enabled.
           // ═════════════════════════════════════════════════════
 
-          if (isDark)
-            NotesArchiveHeader(primary: primary)
+          if (worldEnabled)
+            NotesArchiveHeader(
+              primary: primary,
+            )
           else
             const SizedBox(height: 8),
 
           // ═════════════════════════════════════════════════════
-          // 🎭 MOOD CONSTELLATION / FILTER
-          //
-          // Mood colors stay independent:
-          //
-          // 😊 Happy → Green
-          // 😢 Sad   → Yellow
-          // 😡 Angry → Red
-          // 🔥 Flame → Original
-          //
-          // The universe itself still follows primaryColor.
+          // 🎭 MOOD FILTER
           // ═════════════════════════════════════════════════════
 
           Padding(
@@ -268,37 +282,45 @@ class _NotesScreenState extends State<NotesScreen> {
 
           Expanded(
             child:
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore
+            StreamBuilder<
+                QuerySnapshot
+            >(
+              stream:
+              FirebaseFirestore
                   .instance
-                  .collection('users')
+                  .collection(
+                'users',
+              )
                   .doc(user.uid)
-                  .collection('notes')
+                  .collection(
+                'notes',
+              )
                   .orderBy(
                 'date',
                 descending: true,
               )
                   .snapshots(),
 
-              builder: (
+              builder:
+                  (
                   context,
                   snapshot,
                   ) {
                 // ═══════════════════════════════════════════════
-                // ❌ FIRESTORE ERROR
+                // ❌ ERROR
                 // ═══════════════════════════════════════════════
 
                 if (snapshot.hasError) {
                   return Center(
                     child: Padding(
                       padding:
-                      const EdgeInsets.all(
-                        24,
-                      ),
+                      const EdgeInsets
+                          .all(24),
 
                       child: Column(
                         mainAxisSize:
-                        MainAxisSize.min,
+                        MainAxisSize
+                            .min,
 
                         children: [
                           Icon(
@@ -306,7 +328,8 @@ class _NotesScreenState extends State<NotesScreen> {
                                 .error_outline_rounded,
                             size: 50,
                             color:
-                            colors.error,
+                            colors
+                                .error,
                           ),
 
                           const SizedBox(
@@ -315,10 +338,13 @@ class _NotesScreenState extends State<NotesScreen> {
 
                           const Text(
                             'Could not load your notes.',
-                            style: TextStyle(
-                              fontSize: 17,
+                            style:
+                            TextStyle(
+                              fontSize:
+                              17,
                               fontWeight:
-                              FontWeight.bold,
+                              FontWeight
+                                  .bold,
                             ),
                           ),
 
@@ -327,16 +353,21 @@ class _NotesScreenState extends State<NotesScreen> {
                           ),
 
                           Text(
-                            snapshot.error
+                            snapshot
+                                .error
                                 .toString(),
 
                             textAlign:
-                            TextAlign.center,
+                            TextAlign
+                                .center,
 
-                            style: TextStyle(
-                              fontSize: 12,
+                            style:
+                            TextStyle(
+                              fontSize:
+                              12,
 
-                              color: colors
+                              color:
+                              colors
                                   .onSurface
                                   .withOpacity(
                                 0.60,
@@ -371,17 +402,25 @@ class _NotesScreenState extends State<NotesScreen> {
 
                 if (!snapshot.hasData ||
                     snapshot
-                        .data!.docs.isEmpty) {
+                        .data!
+                        .docs
+                        .isEmpty) {
                   return NotesEmptyState(
                     primary: primary,
-                    title: 'No memories yet',
-                    subtitle: 'Your diary stories will appear here once you start writing.',
+                    title:
+                    'No memories yet',
+                    subtitle:
+                    'Your diary stories will appear here once you start writing.',
                   );
                 }
 
-                List<QueryDocumentSnapshot>
-                docs = List.from(
-                  snapshot.data!.docs,
+                List<
+                    QueryDocumentSnapshot
+                > docs =
+                List.from(
+                  snapshot
+                      .data!
+                      .docs,
                 );
 
                 // ═══════════════════════════════════════════════
@@ -390,24 +429,26 @@ class _NotesScreenState extends State<NotesScreen> {
 
                 if (_selectedMood !=
                     null) {
-                  docs = docs.where(
-                        (doc) {
-                      final data =
-                      doc.data()
-                      as Map<
-                          String,
-                          dynamic>;
+                  docs =
+                      docs.where(
+                            (doc) {
+                          final data =
+                          doc.data()
+                          as Map<
+                              String,
+                              dynamic
+                          >;
 
-                      final mood =
-                      (data['mood'] ??
-                          'neutral')
-                          .toString()
-                          .toLowerCase();
+                          final mood =
+                          (data['mood'] ??
+                              'neutral')
+                              .toString()
+                              .toLowerCase();
 
-                      return mood ==
-                          _selectedMood;
-                    },
-                  ).toList();
+                          return mood ==
+                              _selectedMood;
+                        },
+                      ).toList();
                 }
 
                 // ═══════════════════════════════════════════════
@@ -442,19 +483,22 @@ class _NotesScreenState extends State<NotesScreen> {
                 if (docs.isEmpty) {
                   return NotesEmptyState(
                     primary: primary,
-                    title: 'No memories found',
-                    subtitle: 'There are no diary entries for this mood yet.',
+                    title:
+                    'No memories found',
+                    subtitle:
+                    'There are no diary entries for this mood yet.',
                   );
                 }
 
                 // ═══════════════════════════════════════════════
-                // ✨ ANIMATED MEMORY LIST
+                // ✨ MEMORY LIST
                 // ═══════════════════════════════════════════════
 
                 return AnimatedSwitcher(
                   duration:
                   const Duration(
-                    milliseconds: 300,
+                    milliseconds:
+                    300,
                   ),
 
                   child:
@@ -475,7 +519,8 @@ class _NotesScreenState extends State<NotesScreen> {
                     itemCount:
                     docs.length,
 
-                    itemBuilder: (
+                    itemBuilder:
+                        (
                         context,
                         index,
                         ) {
@@ -484,10 +529,11 @@ class _NotesScreenState extends State<NotesScreen> {
                           .data()
                       as Map<
                           String,
-                          dynamic>;
+                          dynamic
+                      >;
 
                       // ─────────────────────────────────────────
-                      // 📅 NOTE DATE
+                      // 📅 DATE
                       // ─────────────────────────────────────────
 
                       final date =
@@ -509,11 +555,11 @@ class _NotesScreenState extends State<NotesScreen> {
                             .data()
                         as Map<
                             String,
-                            dynamic>;
+                            dynamic
+                        >;
 
                         final prevDate =
-                        (previousData[
-                        'date']
+                        (previousData['date']
                         as Timestamp)
                             .toDate();
 
@@ -527,9 +573,11 @@ class _NotesScreenState extends State<NotesScreen> {
                       // 🔥 FIRESTORE → NOTE MODEL
                       // ═════════════════════════════════════════
 
-                      final note = Note(
+                      final note =
+                      Note(
                         id:
-                        docs[index].id,
+                        docs[index]
+                            .id,
 
                         title:
                         data['title'],
@@ -548,7 +596,9 @@ class _NotesScreenState extends State<NotesScreen> {
                         data['imagePath'],
 
                         drawingPaths:
-                        List<String>.from(
+                        List<
+                            String
+                        >.from(
                           data['drawingPaths'] ??
                               [],
                         ),
@@ -564,28 +614,33 @@ class _NotesScreenState extends State<NotesScreen> {
 
                         children: [
                           // ═════════════════════════════════════
-                          // ✨ NEW DATE GROUP
+                          // 📅 GROUP HEADER
                           // ═════════════════════════════════════
 
-                          if (index == 0 ||
+                          if (index ==
+                              0 ||
                               currentGroup !=
                                   previousGroup)
                             NoteGroupTimelineHeader(
-                              title: currentGroup,
-                              primary: primary,
+                              title:
+                              currentGroup,
+                              primary:
+                              primary,
                             ),
 
                           // ═════════════════════════════════════
-                          // 📖 MEMORY / DIARY CARD
+                          // 📖 DIARY CARD
                           // ═════════════════════════════════════
 
                           SizedBox(
                             width:
-                            double.infinity,
+                            double
+                                .infinity,
 
                             child:
                             DiaryCard(
-                              note: note,
+                              note:
+                              note,
 
                               refreshCallback:
                                   (_) {
@@ -608,31 +663,32 @@ class _NotesScreenState extends State<NotesScreen> {
     );
 
     // ═════════════════════════════════════════════════════════════
-    // 🌌 COSMIC NOTES UNIVERSE
+    // 🌍 DIARY WORLD ROUTER
     //
-    // We use the EXACT SAME background engine as Home and Goals,
-    // but the Notes content gives this screen its own identity.
+    // This is now controlled by ThemeProvider.
     //
-    // Change primary color:
+    // Theme-less
+    //     ↓
+    // DiaryWorld.simple
     //
-    // 💜 Purple → Purple nebula
-    // 🩷 Pink   → Pink nebula
-    // 💙 Blue   → Blue nebula
-    // 🧡 Orange → Orange nebula
-    // 💚 Green  → Green nebula
+    // Cosmic Universe
+    //     ↓
+    // DiaryWorld.cosmicUniverse
     //
-    // Mood colors remain independent.
+    // Future:
+    // Moonlight Ocean
+    // Forest Fireflies
+    // Butterfly Garden
+    // Rainy Street
     // ═════════════════════════════════════════════════════════════
 
-    if (isDark) {
-      return DiaryWorldBackground(
-        scene: DiaryScene.notes,
-        accentColor: primary,
-        child: screen,
-      );
-    }
-
-    // ☀️ Light mode remains clean.
-    return screen;
+    return DiaryWorldBackground(
+      world: selectedWorld,
+      scene: DiaryScene.notes,
+      accentColor: primary,
+      brightness:
+      theme.brightness,
+      child: screen,
+    );
   }
 }

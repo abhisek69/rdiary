@@ -22,11 +22,7 @@ class GoalsSection extends StatelessWidget {
   /// Removes hour/minute/second information so goal comparisons
   /// are based purely on calendar dates.
   DateTime _normalize(DateTime date) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    return DateTime(date.year, date.month, date.day);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -49,32 +45,31 @@ class GoalsSection extends StatelessWidget {
     // Only show goals that are active on the selected date.
     // ───────────────────────────────────────────────────────────
 
-    final visibleGoals = goals.where(
-      (goal) {
-        if (goal.startDate == null) {
-          return true;
-        }
+    final visibleGoals =
+        goals.where((goal) {
+          if (goal.startDate == null) {
+            return true;
+          }
 
-        final start = _normalize(goal.startDate!);
+          final start = _normalize(goal.startDate!);
 
-        // Goal hasn't started yet.
-        if (selected.isBefore(start)) {
-          return false;
-        }
-
-        if (goal.deadline != null) {
-          final end = _normalize(goal.deadline!);
-
-          // Goal remains visible ON its deadline.
-          // It disappears only after the deadline.
-          if (selected.isAfter(end)) {
+          // Goal hasn't started yet.
+          if (selected.isBefore(start)) {
             return false;
           }
-        }
 
-        return true;
-      },
-    ).toList();
+          if (goal.deadline != null) {
+            final end = _normalize(goal.deadline!);
+
+            // Goal remains visible ON its deadline.
+            // It disappears only after the deadline.
+            if (selected.isAfter(end)) {
+              return false;
+            }
+          }
+
+          return true;
+        }).toList();
 
     if (visibleGoals.isEmpty) {
       return const SizedBox.shrink();

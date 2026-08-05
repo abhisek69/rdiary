@@ -22,8 +22,7 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
   late int _selectedMonth;
   late int _selectedYear;
 
-  final List<int> years =
-  List.generate(120, (index) => 1980 + index);
+  final List<int> years = List.generate(120, (index) => 1980 + index);
 
   final List<String> months = const [
     'January',
@@ -55,11 +54,7 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
 
   void _updateFocusedDay() {
     setState(() {
-      _currentFocusedDay = DateTime(
-        _selectedYear,
-        _selectedMonth,
-        1,
-      );
+      _currentFocusedDay = DateTime(_selectedYear, _selectedMonth, 1);
     });
   }
 
@@ -73,46 +68,40 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
     final primary = theme.colorScheme.primary;
     final isDark = theme.brightness == Brightness.dark;
 
-    final textColor = isDark
-        ? Colors.white.withOpacity(0.90)
-        : theme.colorScheme.onSurface;
+    final textColor =
+        isDark ? Colors.white.withOpacity(0.90) : theme.colorScheme.onSurface;
 
-    final mutedTextColor = isDark
-        ? Colors.white.withOpacity(0.42)
-        : theme.colorScheme.onSurface.withOpacity(0.45);
+    final mutedTextColor =
+        isDark
+            ? Colors.white.withOpacity(0.42)
+            : theme.colorScheme.onSurface.withOpacity(0.45);
 
     return Column(
       children: [
         // ======================================================
         // YEAR + MONTH
         // ======================================================
-
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 6,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
               // ==================================================
               // YEAR
               // ==================================================
-
               Expanded(
                 child: _CosmicDropdown<int>(
                   value: _selectedYear,
                   primary: primary,
                   isDark: isDark,
-                  items: years
-                      .map(
-                        (year) => DropdownMenuItem<int>(
-                      value: year,
-                      child: Text(
-                        year.toString(),
-                      ),
-                    ),
-                  )
-                      .toList(),
+                  items:
+                      years
+                          .map(
+                            (year) => DropdownMenuItem<int>(
+                              value: year,
+                              child: Text(year.toString()),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (value) {
                     if (value == null) return;
 
@@ -127,7 +116,6 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
               // ==================================================
               // MONTH
               // ==================================================
-
               Expanded(
                 child: _CosmicDropdown<int>(
                   value: _selectedMonth,
@@ -135,7 +123,7 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
                   isDark: isDark,
                   items: List.generate(
                     12,
-                        (index) => DropdownMenuItem<int>(
+                    (index) => DropdownMenuItem<int>(
                       value: index + 1,
                       child: Text(
                         months[index],
@@ -160,7 +148,6 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
         // ======================================================
         // CALENDAR
         // ======================================================
-
         TableCalendar(
           firstDay: DateTime.utc(1980, 1, 1),
           lastDay: DateTime.utc(2099, 12, 31),
@@ -169,21 +156,15 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
 
           headerVisible: false,
 
-          availableCalendarFormats: const {
-            CalendarFormat.month: 'Month',
-          },
+          availableCalendarFormats: const {CalendarFormat.month: 'Month'},
 
           selectedDayPredicate: (day) {
-            return isSameDay(
-              widget.selectedDay,
-              day,
-            );
+            return isSameDay(widget.selectedDay, day);
           },
 
           // ====================================================
           // DATE SELECTED
           // ====================================================
-
           onDaySelected: (selected, focused) {
             setState(() {
               _currentFocusedDay = focused;
@@ -191,28 +172,20 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
               _selectedYear = focused.year;
             });
 
-            widget.onDaySelected(
-              selected,
-              focused,
-            );
+            widget.onDaySelected(selected, focused);
           },
 
           // ====================================================
           // WEEKDAY STYLE
           // ====================================================
-
           daysOfWeekStyle: DaysOfWeekStyle(
             weekdayStyle: TextStyle(
-              color: isDark
-                  ? primary.withOpacity(0.95)
-                  : primary,
+              color: isDark ? primary.withOpacity(0.95) : primary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
             weekendStyle: TextStyle(
-              color: isDark
-                  ? primary.withOpacity(0.95)
-                  : primary,
+              color: isDark ? primary.withOpacity(0.95) : primary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -221,7 +194,6 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
           // ====================================================
           // CALENDAR STYLE
           // ====================================================
-
           calendarStyle: CalendarStyle(
             outsideDaysVisible: true,
 
@@ -235,31 +207,29 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
               fontWeight: FontWeight.w500,
             ),
 
-            outsideTextStyle: TextStyle(
-              color: mutedTextColor,
-            ),
+            outsideTextStyle: TextStyle(color: mutedTextColor),
 
             // --------------------------------------------------
             // SELECTED DAY
             // --------------------------------------------------
-
             selectedDecoration: BoxDecoration(
               shape: BoxShape.circle,
               color: primary,
-              boxShadow: isDark
-                  ? [
-                BoxShadow(
-                  color: primary.withOpacity(0.75),
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                ),
-                BoxShadow(
-                  color: primary.withOpacity(0.30),
-                  blurRadius: 28,
-                  spreadRadius: 5,
-                ),
-              ]
-                  : null,
+              boxShadow:
+                  isDark
+                      ? [
+                        BoxShadow(
+                          color: primary.withOpacity(0.75),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                        BoxShadow(
+                          color: primary.withOpacity(0.30),
+                          blurRadius: 28,
+                          spreadRadius: 5,
+                        ),
+                      ]
+                      : null,
             ),
 
             selectedTextStyle: const TextStyle(
@@ -270,23 +240,18 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
             // --------------------------------------------------
             // TODAY
             // --------------------------------------------------
-
             todayDecoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDark
-                  ? Colors.white.withOpacity(0.10)
-                  : Colors.grey.withOpacity(0.35),
+              color:
+                  isDark
+                      ? Colors.white.withOpacity(0.10)
+                      : Colors.grey.withOpacity(0.35),
 
-              border: Border.all(
-                color: primary.withOpacity(0.65),
-                width: 1,
-              ),
+              border: Border.all(color: primary.withOpacity(0.65), width: 1),
             ),
 
             todayTextStyle: TextStyle(
-              color: isDark
-                  ? Colors.white
-                  : theme.colorScheme.onSurface,
+              color: isDark ? Colors.white : theme.colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
 
@@ -321,9 +286,7 @@ class _CosmicDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 46,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
 
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(13),
@@ -331,27 +294,23 @@ class _CosmicDropdown<T> extends StatelessWidget {
         // ======================================================
         // DARK MODE
         // ======================================================
+        color: isDark ? primary.withOpacity(0.12) : primary,
 
-        color: isDark
-            ? primary.withOpacity(0.12)
-            : primary,
+        border:
+            isDark
+                ? Border.all(color: primary.withOpacity(0.55), width: 1)
+                : null,
 
-        border: isDark
-            ? Border.all(
-          color: primary.withOpacity(0.55),
-          width: 1,
-        )
-            : null,
-
-        boxShadow: isDark
-            ? [
-          BoxShadow(
-            color: primary.withOpacity(0.18),
-            blurRadius: 12,
-            spreadRadius: 1,
-          ),
-        ]
-            : null,
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: primary.withOpacity(0.18),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : null,
       ),
 
       child: DropdownButtonHideUnderline(
@@ -360,21 +319,15 @@ class _CosmicDropdown<T> extends StatelessWidget {
 
           isExpanded: true,
 
-          dropdownColor: isDark
-              ? const Color(0xFF15111D)
-              : primary,
+          dropdownColor: isDark ? const Color(0xFF15111D) : primary,
 
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: isDark
-                ? primary
-                : Colors.white,
+            color: isDark ? primary : Colors.white,
           ),
 
           style: TextStyle(
-            color: isDark
-                ? Colors.white
-                : Colors.white,
+            color: isDark ? Colors.white : Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),

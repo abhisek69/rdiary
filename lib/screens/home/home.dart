@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/goal.dart';
 import '../../models/note.dart';
@@ -10,8 +11,10 @@ import '../../utils/pulseLoader.dart';
 import 'calendar_section.dart';
 import 'goals_section.dart';
 import 'notes_section.dart';
+
 import '../../backgrounds/diary_world/diary_world.dart';
 import '../../backgrounds/diary_world/diary_world_background.dart';
+import '../../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   final DateTime? initialDate;
@@ -50,8 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    // Use initialDate when HomeScreen was opened for
-    // a particular date. Otherwise use today.
     final initialDate =
         widget.initialDate ?? DateTime.now();
 
@@ -60,10 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final user =
         FirebaseAuth.instance.currentUser;
-
-    // ----------------------------------------------------------
-    // USER NOT LOGGED IN
-    // ----------------------------------------------------------
 
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -77,10 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Load today's notes and goals.
-    _fetchNotesForDate(
-      _selectedDay,
-    );
+    _fetchNotesForDate(_selectedDay);
   }
 
   // ============================================================
@@ -98,9 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _focusedDay = focused;
     });
 
-    _fetchNotesForDate(
-      selected,
-    );
+    _fetchNotesForDate(selected);
   }
 
   // ============================================================
@@ -115,17 +107,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (user == null) return;
 
-    // ----------------------------------------------------------
-    // START LOADING
-    // ----------------------------------------------------------
-
     if (mounted) {
       setState(() {
         _isLoading = true;
       });
     }
 
-    // Normalize selected date.
     final selected = DateTime(
       date.year,
       date.month,
@@ -134,7 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final startOfDay = selected;
 
-    final endOfDay = selected.add(
+    final endOfDay =
+    selected.add(
       const Duration(days: 1),
     );
 
@@ -164,21 +152,16 @@ class _HomeScreenState extends State<HomeScreen> {
       )
           .get();
 
-      // --------------------------------------------------------
-      // IMPORTANT
-      //
-      // The screen might have been removed while Firestore
-      // was loading.
-      // --------------------------------------------------------
-
       if (!mounted) return;
 
-      final notes = notesSnapshot.docs
+      final notes =
+      notesSnapshot.docs
           .map(
-            (doc) => Note.fromFirestore(
-          doc.data(),
-          doc.id,
-        ),
+            (doc) =>
+            Note.fromFirestore(
+              doc.data(),
+              doc.id,
+            ),
       )
           .toList();
 
@@ -193,8 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('goals')
           .get();
 
-      // Another async request happened.
-      // Check again before touching this screen's state.
       if (!mounted) return;
 
       // ========================================================
@@ -218,18 +199,20 @@ class _HomeScreenState extends State<HomeScreen> {
       // FILTER GOALS FOR SELECTED DATE
       // ========================================================
 
-      final goals = goalsSnapshot.docs
+      final goals =
+      goalsSnapshot.docs
           .map(
-            (doc) => Goal.fromFirestore(
-          doc.data(),
-          doc.id,
-        ),
+            (doc) =>
+            Goal.fromFirestore(
+              doc.data(),
+              doc.id,
+            ),
       )
           .where(
             (goal) {
-          // ------------------------------------------------
+          // --------------------------------------------
           // WEEKDAY CHECK
-          // ------------------------------------------------
+          // --------------------------------------------
 
           if (!goal.goalDays.contains(
             weekday,
@@ -237,9 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
             return false;
           }
 
-          // ------------------------------------------------
+          // --------------------------------------------
           // START DATE CHECK
-          // ------------------------------------------------
+          // --------------------------------------------
 
           if (goal.startDate != null) {
             final start = DateTime(
@@ -253,9 +236,9 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           }
 
-          // ------------------------------------------------
+          // --------------------------------------------
           // DEADLINE CHECK
-          // ------------------------------------------------
+          // --------------------------------------------
 
           if (goal.deadline != null) {
             final deadline = DateTime(
@@ -264,8 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
               goal.deadline!.day,
             );
 
-            // Goal remains visible ON deadline.
-            // Hide only after deadline.
             if (selected.isAfter(
               deadline,
             )) {
@@ -290,15 +271,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // --------------------------------------------------------
-      // ERROR HANDLING
-      // --------------------------------------------------------
-
       debugPrint(
         '❌ Error loading HomeScreen data: $e',
       );
 
-      // Never call setState on a disposed HomeScreen.
       if (!mounted) return;
 
       setState(() {
@@ -311,15 +287,35 @@ class _HomeScreenState extends State<HomeScreen> {
   // BUILD
   // ============================================================
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final isDark = theme.brightness == Brightness.dark;
+    // ==========================================================
+    // 🌍 CURRENT DIARY WORLD
+    // ==========================================================
+
+    final themeProvider =
+    context.watch<ThemeProvider>();
+
+    final selectedWorld =
+        themeProvider.diaryWorld;
+
+    /// False only when the user chooses Theme-less.
+    final worldEnabled =
+        selectedWorld != DiaryWorld.simple;
+
+    // ==========================================================
+    // NORMAL APP THEME
+    // ==========================================================
+
+    final theme =
+    Theme.of(context);
+
+    final primary =
+        theme.colorScheme.primary;
+
+    final isDark =
+        theme.brightness ==
+            Brightness.dark;
 
     // ==========================================================
     // HOME CONTENT
@@ -342,52 +338,67 @@ class _HomeScreenState extends State<HomeScreen> {
         // ------------------------------------------------------
 
         Expanded(
-          child: _isLoading
+          child:
+          _isLoading
               ? Center(
             child: AppLoader(
               loadingColor: primary,
-              type: LoaderType.halfTriangleDot,
+              type:
+              LoaderType
+                  .halfTriangleDot,
               size: 120,
             ),
           )
               : SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
+            padding:
+            const EdgeInsets.all(
+              12,
+            ),
             child: Column(
               crossAxisAlignment:
-              CrossAxisAlignment.start,
+              CrossAxisAlignment
+                  .start,
               children: [
-                // ========================================
+                // ======================================
                 // GOALS
-                // ========================================
+                // ======================================
 
                 GoalsSection(
-                  goals: _goalsForSelectedDate,
-                  selectedDay: _selectedDay,
-                  refreshCallback: () =>
+                  goals:
+                  _goalsForSelectedDate,
+                  selectedDay:
+                  _selectedDay,
+                  refreshCallback:
+                      () =>
                       _fetchNotesForDate(
                         _selectedDay,
                       ),
                 ),
 
-                // ========================================
+                // ======================================
                 // NOTES
-                // ========================================
+                // ======================================
 
                 NotesSection(
-                  notes: _notesForSelectedDate,
-                  selectedDay: _selectedDay,
+                  notes:
+                  _notesForSelectedDate,
+                  selectedDay:
+                  _selectedDay,
                   refreshCallback:
                   _fetchNotesForDate,
                 ),
 
-                // ========================================
+                // ======================================
                 // EMPTY STATE
-                // ========================================
+                // ======================================
 
-                if (_notesForSelectedDate.isEmpty &&
-                    _goalsForSelectedDate.isEmpty)
+                if (_notesForSelectedDate
+                    .isEmpty &&
+                    _goalsForSelectedDate
+                        .isEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(
+                    padding:
+                    const EdgeInsets.only(
                       top: 60,
                     ),
                     child: Center(
@@ -395,11 +406,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         'No entries for this date yet.',
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark
-                              ? Colors.white.withOpacity(
+
+                          // Cosmic world can use the
+                          // softer white text.
+                          // Theme-less uses normal
+                          // theme colors.
+                          color:
+                          worldEnabled &&
+                              isDark
+                              ? Colors
+                              .white
+                              .withOpacity(
                             0.45,
                           )
-                              : Colors.grey,
+                              : theme
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(
+                            0.55,
+                          ),
                         ),
                       ),
                     ),
@@ -416,12 +441,25 @@ class _HomeScreenState extends State<HomeScreen> {
     // ==========================================================
 
     final scaffold = Scaffold(
-      // IMPORTANT:
-      // CosmicBackground is OUTSIDE this Scaffold in dark mode.
-      backgroundColor:
-      isDark ? Colors.transparent : null,
+      // --------------------------------------------------------
+      // BACKGROUND
+      //
+      // World enabled:
+      // transparent so DiaryWorldBackground is visible.
+      //
+      // Theme-less:
+      // normal Flutter scaffold background.
+      // --------------------------------------------------------
 
-      extendBodyBehindAppBar: isDark,
+      backgroundColor:
+      worldEnabled
+          ? Colors.transparent
+          : theme.scaffoldBackgroundColor,
+
+      // Only extend behind the AppBar while an environmental
+      // world is actually active.
+      extendBodyBehindAppBar:
+      worldEnabled,
 
       // ========================================================
       // APP BAR
@@ -432,18 +470,20 @@ class _HomeScreenState extends State<HomeScreen> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
 
-        backgroundColor:
-        isDark ? Colors.transparent : primary,
+        // Theme-less should use the normal scaffold surface,
+        // NOT a huge solid primary-color block.
+        backgroundColor: worldEnabled
+            ? Colors.transparent
+            : theme.scaffoldBackgroundColor,
 
-        toolbarHeight: isDark ? 100 : null,
+        // Keep the redesigned header height for both modes.
+        toolbarHeight: 100,
 
         titleSpacing: 20,
 
-        title: isDark
-            ? Column(
+        title: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -451,17 +491,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   "Rocky's Diary",
                   style: TextStyle(
-                    color: primary,
+                    color: worldEnabled
+                        ? primary
+                        : theme.colorScheme.onSurface,
                     fontSize: 25,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
-                    shadows: [
+
+                    // Glow only belongs to a visual world.
+                    shadows: worldEnabled
+                        ? [
                       Shadow(
-                        color:
-                        primary.withOpacity(0.45),
+                        color: primary.withOpacity(0.45),
                         blurRadius: 14,
                       ),
-                    ],
+                    ]
+                        : null,
                   ),
                 ),
 
@@ -480,16 +525,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Capture today, plan tomorrow.',
               style: TextStyle(
-                color:
-                Colors.white.withOpacity(0.62),
+                color: theme.colorScheme.onSurface.withOpacity(0.62),
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
               ),
             ),
           ],
-        )
-            : const Text(
-          "Rocky's Diary",
         ),
       ),
 
@@ -497,12 +538,16 @@ class _HomeScreenState extends State<HomeScreen> {
       // BODY
       // ========================================================
 
-      body: isDark
+      body:
+      worldEnabled
           ? Padding(
-        // AppBar is transparent and body extends behind it.
+        // Transparent environmental AppBar means the
+        // content needs to start underneath it.
         padding: EdgeInsets.only(
           top:
-          MediaQuery.of(context).padding.top +
+          MediaQuery.of(
+            context,
+          ).padding.top +
               100,
         ),
         child: homeContent,
@@ -514,13 +559,17 @@ class _HomeScreenState extends State<HomeScreen> {
       // ========================================================
 
       floatingActionButton: Container(
-        decoration: isDark
+        decoration:
+        worldEnabled
             ? BoxDecoration(
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
               color:
-              primary.withOpacity(0.45),
+              primary
+                  .withOpacity(
+                0.45,
+              ),
               blurRadius: 22,
               spreadRadius: 2,
             ),
@@ -530,13 +579,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
         child: FloatingActionButton(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor:
+          Colors.white,
 
           onPressed: () async {
             await Navigator.pushNamed(
               context,
               '/add',
-              arguments: _selectedDay,
+              arguments:
+              _selectedDay,
             );
 
             if (!mounted) return;
@@ -555,28 +606,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     // ==========================================================
-    // LIGHT MODE
-    // ==========================================================
-
-    if (!isDark) {
-      return scaffold;
-    }
-
-    // ==========================================================
-    // DARK MODE — COSMIC UNIVERSE
+    // 🌍 DIARY WORLD ROUTER
     //
-    // The important architecture:
+    // Theme-less:
+    // DiaryWorld.simple
+    //      ↓
+    // normal Scaffold
     //
-    // DiaryWorldBackground
+    // Cosmic Universe:
+    // DiaryWorld.cosmicUniverse
     //      ↓
-    // transparent Scaffold
-    //      ↓
-    // actual interactive UI
+    // CosmicWorldBackground
+    //
+    // Future worlds use this exact same router.
     // ==========================================================
 
     return DiaryWorldBackground(
+      world: selectedWorld,
       scene: DiaryScene.home,
       accentColor: primary,
+      brightness:
+      theme.brightness,
       child: scaffold,
     );
   }

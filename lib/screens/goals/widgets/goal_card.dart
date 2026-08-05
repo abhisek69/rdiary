@@ -22,35 +22,25 @@ class GoalCard extends StatelessWidget {
 
   /// Convert weekday int to short name
   String _weekdayToString(int weekday) {
-    const days = [
-      "Mon","Tue","Wed","Thu","Fri","Sat","Sun"
-    ];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     return days[weekday - 1];
   }
 
   int _calculateTotalScheduledDays() {
     if (startDate == null || deadline == null) return 0;
 
-    final start = DateTime(
-      startDate!.year,
-      startDate!.month,
-      startDate!.day,
-    );
+    final start = DateTime(startDate!.year, startDate!.month, startDate!.day);
 
-    final end = DateTime(
-      deadline!.year,
-      deadline!.month,
-      deadline!.day,
-    );
+    final end = DateTime(deadline!.year, deadline!.month, deadline!.day);
 
     if (end.isBefore(start)) return 0;
 
     int total = 0;
 
     for (
-    DateTime day = start;
-    !day.isAfter(end);
-    day = day.add(const Duration(days: 1))
+      DateTime day = start;
+      !day.isAfter(end);
+      day = day.add(const Duration(days: 1))
     ) {
       final dayName = _weekdayToString(day.weekday);
 
@@ -62,36 +52,20 @@ class GoalCard extends StatelessWidget {
     return total;
   }
 
-
-
-
   /// Calculate completed within range
   int _calculateCompletedInRange() {
     if (startDate == null || deadline == null) return 0;
 
-    final start = DateTime(
-      startDate!.year,
-      startDate!.month,
-      startDate!.day,
-    );
+    final start = DateTime(startDate!.year, startDate!.month, startDate!.day);
 
-    final end = DateTime(
-      deadline!.year,
-      deadline!.month,
-      deadline!.day,
-    );
+    final end = DateTime(deadline!.year, deadline!.month, deadline!.day);
 
     return completedDates.where((dateString) {
       final date = DateFormat('yyyy-MM-dd').parse(dateString);
 
-      final normalized = DateTime(
-        date.year,
-        date.month,
-        date.day,
-      );
+      final normalized = DateTime(date.year, date.month, date.day);
 
-      return !normalized.isBefore(start) &&
-          !normalized.isAfter(end);
+      return !normalized.isBefore(start) && !normalized.isAfter(end);
     }).length;
   }
 
@@ -99,37 +73,26 @@ class GoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    final totalScheduled =
-    _calculateTotalScheduledDays();
+    final totalScheduled = _calculateTotalScheduledDays();
 
-    final completed =
-    _calculateCompletedInRange();
+    final completed = _calculateCompletedInRange();
 
-    final remaining = totalScheduled > completed
-        ? totalScheduled - completed
-        : 0;
+    final remaining =
+        totalScheduled > completed ? totalScheduled - completed : 0;
 
-    double percentage =
-    totalScheduled == 0
-        ? 0
-        : completed / totalScheduled;
+    double percentage = totalScheduled == 0 ? 0 : completed / totalScheduled;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius:
-        BorderRadius.circular(20),
-        border: Border.all(
-          color: colors.primary.withOpacity(0.2),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.primary.withOpacity(0.2)),
       ),
       child: Column(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           /// TITLE + %
           Row(
             children: [
@@ -146,9 +109,7 @@ class GoalCard extends StatelessWidget {
                 "${(percentage * 100).toInt()}%",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: percentage >= 0.7
-                      ? Colors.green
-                      : colors.primary,
+                  color: percentage >= 0.7 ? Colors.green : colors.primary,
                 ),
               ),
             ],
@@ -157,14 +118,12 @@ class GoalCard extends StatelessWidget {
           const SizedBox(height: 6),
 
           /// DATE RANGE
-          if (startDate != null &&
-              deadline != null)
+          if (startDate != null && deadline != null)
             Text(
               "${DateFormat.yMMMd().format(startDate!)}  →  ${DateFormat.yMMMd().format(deadline!)}",
               style: TextStyle(
                 fontSize: 12,
-                color: colors.onSurface
-                    .withOpacity(0.6),
+                color: colors.onSurface.withOpacity(0.6),
               ),
             ),
 
@@ -205,7 +164,6 @@ class GoalCard extends StatelessWidget {
             deadline: deadline,
           ),
 
-
           const SizedBox(height: 20),
 
           BehaviorGraph(
@@ -220,18 +178,16 @@ class GoalCard extends StatelessWidget {
   }
 
   Widget _statChip(
-      BuildContext context, {
-        required String label,
-        required int value,
-        required Color color,
-      }) {
+    BuildContext context, {
+    required String label,
+    required int value,
+    required Color color,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius:
-        BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         "$label: $value",

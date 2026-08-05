@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
+import '../../../backgrounds/diary_world/diary_world.dart';
 import '../../../services/app_lock_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -31,7 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-
     _loadLockState();
   }
 
@@ -42,7 +42,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadLockState() async {
     final enabled = await _lockService.isLockEnabled();
 
-    // The screen may have been closed while waiting.
     if (!mounted) return;
 
     setState(() {
@@ -87,10 +86,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _logout() async {
     try {
-      // Firebase logout.
       await FirebaseAuth.instance.signOut();
 
-      // Google logout if the user signed in with Google.
       final googleSignIn = GoogleSignIn();
 
       if (await googleSignIn.isSignedIn()) {
@@ -99,19 +96,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       if (!mounted) return;
 
-      // Remove all previous routes and return to login.
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/login',
-            (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/login', (route) => false);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
         SnackBar(
-          content: Text(
-            'Logout failed: $e',
-          ),
+          content: Text('Logout failed: $e'),
         ),
       );
     }
@@ -127,16 +122,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final newColor = await showColorPickerDialog(
       context,
       themeProvider.primaryColor,
-      title: const Text(
-        'Pick a primary color',
-      ),
+      title: const Text('Pick a primary color'),
     );
 
     if (!mounted) return;
 
     final shade = _getMaterialShade(newColor);
 
-    // Prevent very light Material shades.
     if (shade != null && shade < 400) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -153,9 +145,224 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    themeProvider.updatePrimaryColor(
-      newColor,
+    themeProvider.updatePrimaryColor(newColor);
+  }
+
+  // ============================================================
+  // DIARY WORLD SELECTOR
+  // ============================================================
+
+  Future<void> _showDiaryWorldSelector(
+      BuildContext context,
+      ThemeProvider themeProvider,
+      ) async {
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              8,
+              20,
+              24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Choose your diary world',
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  'Choose the atmosphere that surrounds your memories.',
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.bodyMedium,
+                ),
+
+                const SizedBox(height: 20),
+
+                ...DiaryWorld.values.map((world) {
+                  final selected =
+                      themeProvider.diaryWorld == world;
+
+                  final available =
+                  _isDiaryWorldAvailable(world);
+
+                  return Card(
+                    margin: const EdgeInsets.only(
+                      bottom: 10,
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        _getDiaryWorldIcon(world),
+                      ),
+
+                      title: Text(
+                        _getDiaryWorldTitle(world),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      subtitle: Text(
+                        available
+                            ? _getDiaryWorldDescription(world)
+                            : '${_getDiaryWorldDescription(world)}\nIn development',
+                      ),
+
+                      isThreeLine: !available,
+
+                      trailing: selected
+                          ? Icon(
+                        Icons.check_circle,
+                        color: Theme.of(
+                          sheetContext,
+                        ).colorScheme.primary,
+                      )
+                          : available
+                          ? const Icon(
+                        Icons.circle_outlined,
+                      )
+                          : const Icon(
+                        Icons.construction_outlined,
+                      ),
+
+                      onTap: () {
+                        if (!available) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${_getDiaryWorldTitle(world)} is currently in development 🚧',
+                              ),
+                            ),
+                          );
+
+                          return;
+                        }
+
+                        themeProvider.setDiaryWorld(world);
+
+                        Navigator.pop(sheetContext);
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  // ============================================================
+  // DIARY WORLD TITLE
+  // ============================================================
+
+  String _getDiaryWorldTitle(DiaryWorld world) {
+    switch (world) {
+      case DiaryWorld.simple:
+        return 'Theme-less';
+
+      case DiaryWorld.moonlightOcean:
+        return 'Moonlight Ocean';
+
+      case DiaryWorld.forestFireflies:
+        return 'Forest Fireflies';
+
+      case DiaryWorld.butterflyGarden:
+        return 'Butterfly Garden';
+
+      case DiaryWorld.cosmicUniverse:
+        return 'Cosmic Universe';
+
+      case DiaryWorld.rainyStreet:
+        return 'Rainy Street';
+    }
+  }
+
+  // ============================================================
+  // DIARY WORLD DESCRIPTION
+  // ============================================================
+
+  String _getDiaryWorldDescription(DiaryWorld world) {
+    switch (world) {
+      case DiaryWorld.simple:
+        return 'Clean RDiary without a visual world';
+
+      case DiaryWorld.moonlightOcean:
+        return 'A peaceful ocean beneath the moonlight';
+
+      case DiaryWorld.forestFireflies:
+        return 'A magical forest glowing with fireflies';
+
+      case DiaryWorld.butterflyGarden:
+        return 'A peaceful garden filled with butterflies';
+
+      case DiaryWorld.cosmicUniverse:
+        return 'Explore your memories among the stars';
+
+      case DiaryWorld.rainyStreet:
+        return 'A calm street beneath the evening rain';
+    }
+  }
+
+  // ============================================================
+  // DIARY WORLD AVAILABILITY
+  // ============================================================
+
+  bool _isDiaryWorldAvailable(DiaryWorld world) {
+    switch (world) {
+      case DiaryWorld.simple:
+      case DiaryWorld.cosmicUniverse:
+        return true;
+
+      case DiaryWorld.moonlightOcean:
+      case DiaryWorld.forestFireflies:
+      case DiaryWorld.butterflyGarden:
+      case DiaryWorld.rainyStreet:
+        return false;
+    }
+  }
+
+  // ============================================================
+  // DIARY WORLD ICON
+  // ============================================================
+
+  IconData _getDiaryWorldIcon(DiaryWorld world) {
+    switch (world) {
+      case DiaryWorld.simple:
+        return Icons.layers_clear_outlined;
+
+      case DiaryWorld.moonlightOcean:
+        return Icons.nightlight_round;
+
+      case DiaryWorld.forestFireflies:
+        return Icons.forest_outlined;
+
+      case DiaryWorld.butterflyGarden:
+        return Icons.local_florist_outlined;
+
+      case DiaryWorld.cosmicUniverse:
+        return Icons.auto_awesome;
+
+      case DiaryWorld.rainyStreet:
+        return Icons.umbrella_outlined;
+    }
   }
 
   // ============================================================
@@ -170,26 +377,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user =
         FirebaseAuth.instance.currentUser;
 
-    // Is RDiary explicitly using dark mode?
     final isDark =
-        themeProvider.themeMode == ThemeMode.dark;
+        themeProvider.themeMode ==
+            ThemeMode.dark;
 
-    // Is RDiary following the phone's theme?
     final useSystemTheme =
-        themeProvider.themeMode == ThemeMode.system;
+        themeProvider.themeMode ==
+            ThemeMode.system;
 
-    // Actual phone brightness.
-    // Used to show the correct disabled Dark Mode switch state
-    // while System Theme is enabled.
     final systemIsDark =
-        MediaQuery.platformBrightnessOf(context) ==
+        MediaQuery.platformBrightnessOf(
+          context,
+        ) ==
             Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-        ),
+        title: const Text('Settings'),
       ),
 
       body: ListView(
@@ -220,16 +424,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Appearance',
           ),
 
-          const SizedBox(
-            height: 8,
+          const SizedBox(height: 8),
+
+          // ----------------------------------------------------
+          // DIARY THEME
+          // ----------------------------------------------------
+
+          ListTile(
+            contentPadding:
+            EdgeInsets.zero,
+
+            leading: const Icon(
+              Icons.auto_awesome_outlined,
+            ),
+
+            title: const Text(
+              'Diary Theme',
+            ),
+
+            subtitle: Text(
+              _getDiaryWorldTitle(
+                themeProvider.diaryWorld,
+              ),
+            ),
+
+            trailing: const Icon(
+              Icons.chevron_right,
+            ),
+
+            onTap: () {
+              _showDiaryWorldSelector(
+                context,
+                themeProvider,
+              );
+            },
           ),
+
+          const Divider(height: 20),
 
           // ----------------------------------------------------
           // SYSTEM THEME
           // ----------------------------------------------------
 
           SwitchListTile(
-            contentPadding: EdgeInsets.zero,
+            contentPadding:
+            EdgeInsets.zero,
 
             secondary: const Icon(
               Icons.brightness_auto,
@@ -253,11 +492,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // ----------------------------------------------------
-          // MANUAL DARK MODE
+          // DARK MODE
           // ----------------------------------------------------
 
           SwitchListTile(
-            contentPadding: EdgeInsets.zero,
+            contentPadding:
+            EdgeInsets.zero,
 
             secondary: Icon(
               useSystemTheme
@@ -277,13 +517,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : 'Manually switch between light and dark mode',
             ),
 
-            // When system mode is enabled, display the phone's
-            // current state even though this switch is disabled.
             value: useSystemTheme
                 ? systemIsDark
                 : isDark,
 
-            // null disables the manual switch.
             onChanged: useSystemTheme
                 ? null
                 : themeProvider.toggleTheme,
@@ -294,7 +531,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ----------------------------------------------------
 
           ListTile(
-            contentPadding: EdgeInsets.zero,
+            contentPadding:
+            EdgeInsets.zero,
 
             leading: const Icon(
               Icons.palette_outlined,
@@ -321,9 +559,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          const Divider(
-            height: 36,
-          ),
+          const Divider(height: 36),
 
           // ====================================================
           // PRIVACY & SECURITY
@@ -334,16 +570,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Privacy & Security',
           ),
 
-          const SizedBox(
-            height: 8,
-          ),
-
-          // ----------------------------------------------------
-          // APP LOCK
-          // ----------------------------------------------------
+          const SizedBox(height: 8),
 
           SwitchListTile(
-            contentPadding: EdgeInsets.zero,
+            contentPadding:
+            EdgeInsets.zero,
 
             secondary: const Icon(
               Icons.lock_outline,
@@ -361,17 +592,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             onChanged: (enabled) async {
               if (enabled) {
-                // User must create a PIN before enabling lock.
                 await Get.toNamed(
                   '/create-pin',
                 );
 
-                // Reload actual lock state after returning.
                 await _loadLockState();
               } else {
-                await _lockService.setLockEnabled(
-                  false,
-                );
+                await _lockService
+                    .setLockEnabled(false);
 
                 if (!mounted) return;
 
@@ -382,9 +610,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          const Divider(
-            height: 36,
-          ),
+          const Divider(height: 36),
 
           // ====================================================
           // ACCOUNT
@@ -395,13 +621,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Account',
           ),
 
-          const SizedBox(
-            height: 16,
-          ),
-
-          // ----------------------------------------------------
-          // LOGOUT
-          // ----------------------------------------------------
+          const SizedBox(height: 16),
 
           SizedBox(
             width: double.infinity,
@@ -417,7 +637,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Logout',
               ),
 
-              style: ElevatedButton.styleFrom(
+              style:
+              ElevatedButton.styleFrom(
                 backgroundColor:
                 Colors.redAccent,
 
@@ -465,32 +686,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : null,
         ),
 
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
 
         Text(
-          user.displayName ??
-              'No name',
-
-          style:
-          Theme.of(context)
-              .textTheme
-              .titleMedium,
+          user.displayName ?? 'No name',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium,
         ),
 
-        const SizedBox(
-          height: 3,
-        ),
+        const SizedBox(height: 3),
 
         Text(
-          user.email ??
-              'No email',
-
-          style:
-          Theme.of(context)
-              .textTheme
-              .bodyMedium,
+          user.email ?? 'No email',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium,
         ),
       ],
     );
@@ -506,19 +717,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ) {
     return Text(
       title,
-
-      style:
-      Theme.of(context)
-          .textTheme
-          .titleMedium
-          ?.copyWith(
-        fontWeight:
-        FontWeight.bold,
-
-        color:
-        Theme.of(context)
-            .colorScheme
-            .primary,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: Theme.of(
+          context,
+        ).colorScheme.primary,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'note.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 class NoteProvider with ChangeNotifier {
   final List<Note> _notes = [];
 
@@ -12,14 +13,14 @@ class NoteProvider with ChangeNotifier {
     notifyListeners(); // tells UI to update
   }
 
-
-   updateNote(Note updatedNote) {
+  updateNote(Note updatedNote) {
     final index = _notes.indexWhere((n) => n.id == updatedNote.id);
     if (index != -1) {
       _notes[index] = updatedNote;
       notifyListeners();
     }
   }
+
   Future<void> deleteNote(String noteId) async {
     // Remove from Firestore
     try {

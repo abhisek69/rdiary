@@ -24,54 +24,43 @@ class BehaviorGraph extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final now = _normalize(DateTime.now());
-    final startOfWeek =
-    now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
 
     List<double> progress = [];
     double value = 0;
 
     for (int i = 0; i < 7; i++) {
-      final dayDate =
-      _normalize(startOfWeek.add(Duration(days: i)));
+      final dayDate = _normalize(startOfWeek.add(Duration(days: i)));
 
-      final dayName =
-      DateFormat('EEE').format(dayDate);
+      final dayName = DateFormat('EEE').format(dayDate);
 
-      final formattedDate =
-      DateFormat('yyyy-MM-dd').format(dayDate);
+      final formattedDate = DateFormat('yyyy-MM-dd').format(dayDate);
 
-      final isScheduled =
-      goalDays.contains(dayName);
+      final isScheduled = goalDays.contains(dayName);
 
-      final isCompleted =
-      completedDates.contains(formattedDate);
+      final isCompleted = completedDates.contains(formattedDate);
 
       // 🚫 BEFORE START DATE
-      if (startDate != null &&
-          dayDate.isBefore(_normalize(startDate!))) {
+      if (startDate != null && dayDate.isBefore(_normalize(startDate!))) {
         progress.add(value);
         continue;
       }
 
       // 🚫 AFTER DEADLINE
-      if (deadline != null &&
-          dayDate.isAfter(_normalize(deadline!))) {
+      if (deadline != null && dayDate.isAfter(_normalize(deadline!))) {
         progress.add(value);
         continue;
       }
 
       if (!isScheduled) {
         progress.add(value);
-      }
-      else if (isCompleted) {
+      } else if (isCompleted) {
         value += 1;
         progress.add(value);
-      }
-      else if (dayDate.isBefore(now)) {
+      } else if (dayDate.isBefore(now)) {
         value -= 1;
         progress.add(value);
-      }
-      else {
+      } else {
         progress.add(value);
       }
     }
@@ -94,10 +83,7 @@ class BehaviorGraph extends StatelessWidget {
             LineChartBarData(
               spots: List.generate(
                 progress.length,
-                    (index) => FlSpot(
-                  index.toDouble(),
-                  progress[index],
-                ),
+                (index) => FlSpot(index.toDouble(), progress[index]),
               ),
               isCurved: true,
               color: colors.primary,

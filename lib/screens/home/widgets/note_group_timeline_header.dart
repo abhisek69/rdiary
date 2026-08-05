@@ -16,10 +16,7 @@ class NoteGroupTimelineHeader extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 12,
-        bottom: 12,
-      ),
+      padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: Row(
         children: [
           // ─────────────────────────────────────────────────────
@@ -32,16 +29,12 @@ class NoteGroupTimelineHeader extends StatelessWidget {
               shape: BoxShape.circle,
               color: primary,
               border: Border.all(
-                color: Colors.white.withOpacity(
-                  isDark ? 0.55 : 0.25,
-                ),
+                color: Colors.white.withOpacity(isDark ? 0.55 : 0.25),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: primary.withOpacity(
-                    0.75,
-                  ),
+                  color: primary.withOpacity(0.75),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -75,12 +68,8 @@ class NoteGroupTimelineHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    primary.withOpacity(
-                      0.50,
-                    ),
-                    primary.withOpacity(
-                      0.08,
-                    ),
+                    primary.withOpacity(0.50),
+                    primary.withOpacity(0.08),
                     Colors.transparent,
                   ],
                 ),
@@ -93,9 +82,7 @@ class NoteGroupTimelineHeader extends StatelessWidget {
           Icon(
             Icons.auto_awesome_rounded,
             size: 13,
-            color: primary.withOpacity(
-              0.70,
-            ),
+            color: primary.withOpacity(0.70),
           ),
         ],
       ),

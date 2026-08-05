@@ -23,21 +23,14 @@ class GoalCard extends StatelessWidget {
   // ═══════════════════════════════════════════════════════════════
 
   DateTime _normalize(DateTime date) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    return DateTime(date.year, date.month, date.day);
   }
 
   // ═══════════════════════════════════════════════════════════════
   // 🗑️ DELETE GOAL
   // ═══════════════════════════════════════════════════════════════
 
-  Future<void> _deleteGoal(
-    BuildContext context,
-    Goal goal,
-  ) async {
+  Future<void> _deleteGoal(BuildContext context, Goal goal) async {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final isDark = theme.brightness == Brightness.dark;
@@ -50,10 +43,14 @@ class GoalCard extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF101016) : theme.colorScheme.surface,
+          backgroundColor:
+              isDark ? const Color(0xFF101016) : theme.colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: isDark ? BorderSide(color: primary.withOpacity(0.35)) : BorderSide.none,
+            side:
+                isDark
+                    ? BorderSide(color: primary.withOpacity(0.35))
+                    : BorderSide.none,
           ),
           title: Text(
             'Delete Goal?',
@@ -73,10 +70,7 @@ class GoalCard extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: primary),
-              ),
+              child: Text('Cancel', style: TextStyle(color: primary)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -135,7 +129,10 @@ class GoalCard extends StatelessWidget {
           // ─────────────────────────────────────────────────────
           // COSMIC GLASS
           // ─────────────────────────────────────────────────────
-          color: isDark ? Colors.black.withOpacity(isCompleted ? 0.28 : 0.40) : surface,
+          color:
+              isDark
+                  ? Colors.black.withOpacity(isCompleted ? 0.28 : 0.40)
+                  : surface,
           // ─────────────────────────────────────────────────────
           // ACCENT BORDER
           // ─────────────────────────────────────────────────────
@@ -144,8 +141,8 @@ class GoalCard extends StatelessWidget {
               isCompleted
                   ? 0.30
                   : isDark
-                      ? 0.68
-                      : 0.80,
+                  ? 0.68
+                  : 0.80,
             ),
             width: isDark ? 1.15 : 1.5,
           ),
@@ -158,8 +155,8 @@ class GoalCard extends StatelessWidget {
                 isCompleted
                     ? 0.07
                     : isDark
-                        ? 0.16
-                        : 0.25,
+                    ? 0.16
+                    : 0.25,
               ),
               blurRadius: isDark ? 18 : 12,
               spreadRadius: 0,
@@ -167,10 +164,7 @@ class GoalCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 13,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
               // ═════════════════════════════════════════════════
@@ -183,9 +177,7 @@ class GoalCard extends StatelessWidget {
                   activeColor: primary,
                   checkColor: Colors.white,
                   side: BorderSide(
-                    color: primary.withOpacity(
-                      isCompleted ? 0.55 : 0.95,
-                    ),
+                    color: primary.withOpacity(isCompleted ? 0.55 : 0.95),
                     width: 1.5,
                   ),
                   onChanged: (value) async {
@@ -207,9 +199,7 @@ class GoalCard extends StatelessWidget {
                         .doc(user.uid)
                         .collection('goals')
                         .doc(goal.id)
-                        .update({
-                      'completedDates': updatedDates,
-                    });
+                        .update({'completedDates': updatedDates});
 
                     refreshCallback();
                   },
@@ -227,12 +217,16 @@ class GoalCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isCompleted
-                        ? onSurface.withOpacity(0.42)
-                        : isDark
+                    color:
+                        isCompleted
+                            ? onSurface.withOpacity(0.42)
+                            : isDark
                             ? Colors.white.withOpacity(0.92)
                             : onSurface,
-                    decoration: isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                    decoration:
+                        isCompleted
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
                     decorationColor: primary.withOpacity(0.55),
                   ),
                   child: Text(goal.title),
