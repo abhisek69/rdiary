@@ -51,10 +51,8 @@ class AppLockService {
 
       return authenticated;
     } catch (e) {
-      print("Biometric error: $e")
-      ;
+      print("Biometric error: $e");
       return false;
     }
   }
-
 }

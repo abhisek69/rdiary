@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/app_lock_service.dart';
 import 'package:flutter/services.dart';
+
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
 
@@ -27,7 +28,6 @@ class _LockScreenState extends State<LockScreen> {
       Get.offAllNamed('/home');
     }
   }
-
 
   void _onNumberTap(String number) async {
     if (_enteredPin.length >= 4) return;
@@ -68,8 +68,7 @@ class _LockScreenState extends State<LockScreen> {
   void _onBackspace() {
     if (_enteredPin.isEmpty) return;
     setState(() {
-      _enteredPin =
-          _enteredPin.substring(0, _enteredPin.length - 1);
+      _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1);
     });
   }
 
@@ -83,30 +82,26 @@ class _LockScreenState extends State<LockScreen> {
       body: SafeArea(
         child: Column(
           children: [
-
             const SizedBox(height: 60),
 
             /// 🔒 TITLE WITH GLOW
             Column(
               children: [
                 Container(
-                  decoration: isDark
-                      ? BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.primary.withOpacity(0.6),
-                        blurRadius: 25,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  )
-                      : null,
-                  child: Icon(
-                    Icons.lock,
-                    size: 70,
-                    color: colors.primary,
-                  ),
+                  decoration:
+                      isDark
+                          ? BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.primary.withOpacity(0.6),
+                                blurRadius: 25,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          )
+                          : null,
+                  child: Icon(Icons.lock, size: 70, color: colors.primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -120,9 +115,7 @@ class _LockScreenState extends State<LockScreen> {
                 const SizedBox(height: 8),
                 Text(
                   "Enter your 4-digit PIN",
-                  style: TextStyle(
-                    color: colors.onSurface.withOpacity(0.6),
-                  ),
+                  style: TextStyle(color: colors.onSurface.withOpacity(0.6)),
                 ),
               ],
             ),
@@ -142,18 +135,20 @@ class _LockScreenState extends State<LockScreen> {
                   height: 18,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: filled
-                        ? colors.primary
-                        : colors.outline.withOpacity(0.3),
-                    boxShadow: isDark && filled
-                        ? [
-                      BoxShadow(
-                        color: colors.primary.withOpacity(0.8),
-                        blurRadius: 12,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                        : [],
+                    color:
+                        filled
+                            ? colors.primary
+                            : colors.outline.withOpacity(0.3),
+                    boxShadow:
+                        isDark && filled
+                            ? [
+                              BoxShadow(
+                                color: colors.primary.withOpacity(0.8),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                            : [],
                   ),
                 );
               }),
@@ -167,15 +162,16 @@ class _LockScreenState extends State<LockScreen> {
               child: Column(
                 children: [
                   for (var row in [
-                    ['1','2','3'],
-                    ['4','5','6'],
-                    ['7','8','9'],
+                    ['1', '2', '3'],
+                    ['4', '5', '6'],
+                    ['7', '8', '9'],
                   ])
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: row.map((num) {
-                        return _buildKey(num, colors);
-                      }).toList(),
+                      children:
+                          row.map((num) {
+                            return _buildKey(num, colors);
+                          }).toList(),
                     ),
 
                   Row(
@@ -185,8 +181,7 @@ class _LockScreenState extends State<LockScreen> {
                       _buildKey('0', colors),
                       IconButton(
                         onPressed: _onBackspace,
-                        icon: Icon(Icons.backspace,
-                            color: colors.onSurface),
+                        icon: Icon(Icons.backspace, color: colors.onSurface),
                       ),
                     ],
                   ),
@@ -206,15 +201,16 @@ class _LockScreenState extends State<LockScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: colors.primary.withOpacity(0.1),
-                    boxShadow: isDark
-                        ? [
-                      BoxShadow(
-                        color: colors.primary.withOpacity(0.7),
-                        blurRadius: 6,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                        : [],
+                    boxShadow:
+                        isDark
+                            ? [
+                              BoxShadow(
+                                color: colors.primary.withOpacity(0.7),
+                                blurRadius: 6,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                            : [],
                   ),
                   child: Icon(
                     Icons.fingerprint,
@@ -229,7 +225,6 @@ class _LockScreenState extends State<LockScreen> {
       ),
     );
   }
-
 
   Widget _buildKey(String number, ColorScheme colors) {
     return Padding(

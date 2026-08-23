@@ -31,9 +31,7 @@ class AppLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: _buildLoader(),
-    );
+    return Center(child: _buildLoader());
   }
 
   Widget _buildLoader() {
@@ -63,10 +61,7 @@ class AppLoader extends StatelessWidget {
         );
 
       case LoaderType.inkDrop:
-        return LoadingAnimationWidget.inkDrop(
-          color: loadingColor,
-          size: size,
-        );
+        return LoadingAnimationWidget.inkDrop(color: loadingColor, size: size);
 
       case LoaderType.flickr:
         return LoadingAnimationWidget.flickr(
@@ -99,13 +94,8 @@ class AppLoader extends StatelessWidget {
           size: size,
         );
 
-
-
       case LoaderType.waveDots:
-        return LoadingAnimationWidget.waveDots(
-          color: loadingColor,
-          size: size,
-        );
+        return LoadingAnimationWidget.waveDots(color: loadingColor, size: size);
 
       case LoaderType.twoRotatingArc:
         return LoadingAnimationWidget.twoRotatingArc(

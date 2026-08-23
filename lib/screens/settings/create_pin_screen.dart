@@ -64,11 +64,9 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   void _onBackspace() {
     setState(() {
       if (!_isConfirming && _firstPin.isNotEmpty) {
-        _firstPin =
-            _firstPin.substring(0, _firstPin.length - 1);
+        _firstPin = _firstPin.substring(0, _firstPin.length - 1);
       } else if (_isConfirming && _confirmPin.isNotEmpty) {
-        _confirmPin =
-            _confirmPin.substring(0, _confirmPin.length - 1);
+        _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
       }
     });
   }
@@ -76,30 +74,23 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final currentPin =
-    _isConfirming ? _confirmPin : _firstPin;
+    final currentPin = _isConfirming ? _confirmPin : _firstPin;
 
     return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
         child: Column(
-          mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-
             const SizedBox(height: 40),
 
             /// 🔒 TITLE
             Column(
               children: [
-                Icon(Icons.lock_outline,
-                    size: 60,
-                    color: colors.primary),
+                Icon(Icons.lock_outline, size: 60, color: colors.primary),
                 const SizedBox(height: 16),
                 Text(
-                  _isConfirming
-                      ? "Confirm PIN"
-                      : "Create PIN",
+                  _isConfirming ? "Confirm PIN" : "Create PIN",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -108,20 +99,15 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isConfirming
-                      ? "Re-enter your PIN"
-                      : "Enter a 4-digit PIN",
-                  style: TextStyle(
-                    color: colors.onSurface.withOpacity(0.6),
-                  ),
+                  _isConfirming ? "Re-enter your PIN" : "Enter a 4-digit PIN",
+                  style: TextStyle(color: colors.onSurface.withOpacity(0.6)),
                 ),
               ],
             ),
 
             /// 🔵 PIN DOTS
             Row(
-              mainAxisAlignment:
-              MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
                 return Container(
                   margin: const EdgeInsets.all(8),
@@ -129,10 +115,10 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   height: 16,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: index < currentPin.length
-                        ? colors.primary
-                        : colors.outline
-                        .withOpacity(0.3),
+                    color:
+                        index < currentPin.length
+                            ? colors.primary
+                            : colors.outline.withOpacity(0.3),
                   ),
                 );
               }),
@@ -140,33 +126,30 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
 
             /// 🔢 KEYPAD
             Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 children: [
                   for (var row in [
-                    ['1','2','3'],
-                    ['4','5','6'],
-                    ['7','8','9'],
+                    ['1', '2', '3'],
+                    ['4', '5', '6'],
+                    ['7', '8', '9'],
                   ])
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceEvenly,
-                      children: row.map((num) {
-                        return _buildKey(num, colors);
-                      }).toList(),
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:
+                          row.map((num) {
+                            return _buildKey(num, colors);
+                          }).toList(),
                     ),
 
                   Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       const SizedBox(width: 48),
                       _buildKey('0', colors),
                       IconButton(
                         onPressed: _onBackspace,
-                        icon: Icon(Icons.backspace,
-                            color: colors.onSurface),
+                        icon: Icon(Icons.backspace, color: colors.onSurface),
                       ),
                     ],
                   ),
@@ -185,8 +168,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: InkWell(
-        borderRadius:
-        BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(50),
         onTap: () => _onNumberTap(number),
         child: Container(
           width: 70,
@@ -194,8 +176,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color:
-            colors.primary.withOpacity(0.1),
+            color: colors.primary.withOpacity(0.1),
           ),
           child: Text(
             number,

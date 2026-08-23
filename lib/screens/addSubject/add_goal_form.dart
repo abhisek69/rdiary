@@ -16,7 +16,13 @@ class _AddGoalFormState extends State<AddGoalForm> {
   final _goalController = TextEditingController();
 
   final List<String> _weekDays = [
-    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun",
   ];
 
   List<String> _selectedDays = [];
@@ -48,15 +54,14 @@ class _AddGoalFormState extends State<AddGoalForm> {
           .collection('goals')
           .doc(id)
           .set({
-        'title': goalName,
-        'goalDays': _selectedDays,
-        'startDate': Timestamp.fromDate(_startDate),
-        'deadline': _deadline != null
-            ? Timestamp.fromDate(_deadline!)
-            : null,
-        'isCompleted': false,
-        'createdAt': Timestamp.now(),
-      });
+            'title': goalName,
+            'goalDays': _selectedDays,
+            'startDate': Timestamp.fromDate(_startDate),
+            'deadline':
+                _deadline != null ? Timestamp.fromDate(_deadline!) : null,
+            'isCompleted': false,
+            'createdAt': Timestamp.now(),
+          });
 
       // ✅ THEMED SNACKBAR WITH GOAL NAME
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,11 +70,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
             "$goalName goal added 🎯",
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor:
-          Theme
-              .of(context)
-              .colorScheme
-              .primary,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -93,25 +94,17 @@ class _AddGoalFormState extends State<AddGoalForm> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme
-        .of(context)
-        .colorScheme;
-    final isDark = Theme
-        .of(context)
-        .brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const Text(
             "Set Your Goal",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 24),
@@ -154,9 +147,7 @@ class _AddGoalFormState extends State<AddGoalForm> {
           /// 📅 Repeat Days
           const Text(
             "Repeat on Days",
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
 
           const SizedBox(height: 14),
@@ -164,35 +155,32 @@ class _AddGoalFormState extends State<AddGoalForm> {
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: _weekDays.map((day) {
-              final isSelected =
-              _selectedDays.contains(day);
+            children:
+                _weekDays.map((day) {
+                  final isSelected = _selectedDays.contains(day);
 
-              return ChoiceChip(
-                label: Text(day),
-                selected: isSelected,
-                selectedColor: colors.primary,
-                backgroundColor: colors.surface,
-                labelStyle: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : colors.onSurface,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius.circular(12),
-                ),
-                onSelected: (val) {
-                  setState(() {
-                    if (val) {
-                      _selectedDays.add(day);
-                    } else {
-                      _selectedDays.remove(day);
-                    }
-                  });
-                },
-              );
-            }).toList(),
+                  return ChoiceChip(
+                    label: Text(day),
+                    selected: isSelected,
+                    selectedColor: colors.primary,
+                    backgroundColor: colors.surface,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : colors.onSurface,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (val) {
+                      setState(() {
+                        if (val) {
+                          _selectedDays.add(day);
+                        } else {
+                          _selectedDays.remove(day);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
           ),
 
           const SizedBox(height: 30),
@@ -201,18 +189,16 @@ class _AddGoalFormState extends State<AddGoalForm> {
           _dateTile(
             context,
             label: "Deadline",
-            value: _deadline == null
-                ? "Select Deadline"
-                : DateFormat.yMMMd()
-                .format(_deadline!),
+            value:
+                _deadline == null
+                    ? "Select Deadline"
+                    : DateFormat.yMMMd().format(_deadline!),
             icon: Icons.calendar_today_outlined,
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
-                initialDate:
-                _deadline ?? _startDate,
-                firstDate:
-                _startDate, // important fix
+                initialDate: _deadline ?? _startDate,
+                firstDate: _startDate, // important fix
                 lastDate: DateTime(2100),
               );
 
@@ -231,20 +217,16 @@ class _AddGoalFormState extends State<AddGoalForm> {
               onPressed: _saveGoal,
               icon: const Icon(Icons.flag),
               label: const Padding(
-                padding:
-                EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 child: Text(
                   "Set Goal",
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
@@ -253,42 +235,36 @@ class _AddGoalFormState extends State<AddGoalForm> {
       ),
     );
   }
+
   Widget _dateTile(
-      BuildContext context, {
-        required String label,
-        required String value,
-        required IconData icon,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String label,
+    required String value,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     final colors = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius:
-          BorderRadius.circular(16),
-          border: Border.all(
-            color: colors.primary.withOpacity(0.2),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.primary.withOpacity(0.2)),
         ),
         child: Row(
-          mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: colors.onSurface
-                        .withOpacity(0.6),
+                    color: colors.onSurface.withOpacity(0.6),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -296,18 +272,15 @@ class _AddGoalFormState extends State<AddGoalForm> {
                   value,
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight:
-                    FontWeight.w600,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            Icon(icon,
-                color: colors.primary),
+            Icon(icon, color: colors.primary),
           ],
         ),
       ),
     );
   }
-
 }

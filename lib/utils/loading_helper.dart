@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 // Adjust path accordingly
 
-void showLoadingScreen(BuildContext context, {String message = 'Please wait...'}) {
+void showLoadingScreen(
+  BuildContext context, {
+  String message = 'Please wait...',
+}) {
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -13,9 +16,11 @@ void showLoadingScreen(BuildContext context, {String message = 'Please wait...'}
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-             CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+            CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 20),
-            Text(message, style: (const TextStyle(color: Colors.black)),),
+            Text(message, style: (const TextStyle(color: Colors.black))),
           ],
         ),
       );

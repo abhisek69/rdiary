@@ -23,7 +23,7 @@ class LoginScreen extends StatelessWidget {
               //   begin: Alignment.topLeft,
               //   end: Alignment.bottomRight,
               // ),
-              color:  Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
 
@@ -31,26 +31,28 @@ class LoginScreen extends StatelessWidget {
           Positioned(
             top: -60,
             left: -60,
-            child: Container(
-              height: 200,
-              width: 200,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-            ).animate().fadeIn(duration: 1000.ms).scale(),
+            child:
+                Container(
+                  height: 200,
+                  width: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                ).animate().fadeIn(duration: 1000.ms).scale(),
           ),
           Positioned(
             bottom: -80,
             right: -80,
-            child: Container(
-              height: 240,
-              width: 240,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                shape: BoxShape.circle,
-              ),
-            ).animate().fadeIn(duration: 1200.ms).scale(),
+            child:
+                Container(
+                  height: 240,
+                  width: 240,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.06),
+                    shape: BoxShape.circle,
+                  ),
+                ).animate().fadeIn(duration: 1200.ms).scale(),
           ),
 
           // 🌟 Main Content
@@ -91,37 +93,46 @@ class LoginScreen extends StatelessWidget {
 
                 // 🔐 Google Sign-in Button Styled & Animated
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.login, color: Colors.white),
-                  label: const Text('Sign in with Google'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    backgroundColor: Colors.white.withOpacity(0.15),
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 4,
-                  ),
-                  onPressed: () async {
-                    showLoadingScreen(context, message: "Logging in...");
-
-                    final user = await _authService.signInWithGoogle();
-
-                    hideLoadingScreen(context);
-
-                    if (user != null) {
-                      Get.offAllNamed('/home');
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Login failed. Please try again."),
-                          backgroundColor: Colors.red,
+                      icon: const Icon(Icons.login, color: Colors.white),
+                      label: const Text('Sign in with Google'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
                         ),
-                      );
-                    }
-                  },
-                ).animate().fadeIn(delay: 800.ms).slideY(begin: 1, duration: 600.ms),
+                        backgroundColor: Colors.white.withOpacity(0.15),
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 4,
+                      ),
+                      onPressed: () async {
+                        showLoadingScreen(context, message: "Logging in...");
+
+                        final user = await _authService.signInWithGoogle();
+
+                        hideLoadingScreen(context);
+
+                        if (user != null) {
+                          Get.offAllNamed('/home');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Login failed. Please try again."),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 800.ms)
+                    .slideY(begin: 1, duration: 600.ms),
               ],
             ),
           ),

@@ -22,96 +22,121 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
   late int _selectedMonth;
   late int _selectedYear;
 
-  final List<int> years = List.generate(100, (index) => 1980 + index);
+  final List<int> years = List.generate(120, (index) => 1980 + index);
+
   final List<String> months = const [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   @override
   void initState() {
     super.initState();
+
     _currentFocusedDay = widget.focusedDay;
     _selectedMonth = widget.focusedDay.month;
     _selectedYear = widget.focusedDay.year;
   }
 
+  // ============================================================
+  // UPDATE CALENDAR MONTH / YEAR
+  // ============================================================
+
   void _updateFocusedDay() {
     setState(() {
-      _currentFocusedDay = DateTime(_selectedYear, _selectedMonth);
+      _currentFocusedDay = DateTime(_selectedYear, _selectedMonth, 1);
     });
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final textColor =
+        isDark ? Colors.white.withOpacity(0.90) : theme.colorScheme.onSurface;
+
+    final mutedTextColor =
+        isDark
+            ? Colors.white.withOpacity(0.42)
+            : theme.colorScheme.onSurface.withOpacity(0.45);
+
     return Column(
       children: [
-        // 🔽 Month & Year Dropdowns
+        // ======================================================
+        // YEAR + MONTH
+        // ======================================================
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
-              // Year Dropdown (50% width)
+              // ==================================================
+              // YEAR
+              // ==================================================
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _selectedYear,
-                      dropdownColor: Theme.of(context).colorScheme.primary,
-                      iconEnabledColor: Colors.white,
-                      style: const TextStyle(color: Colors.white),
-                      onChanged: (val) {
-                        if (val != null) {
-                          _selectedYear = val;
-                          _updateFocusedDay();
-                        }
-                      },
-                      items: years.map((year) {
-                        return DropdownMenuItem(
-                          value: year,
-                          child: Text(year.toString()),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                child: _CosmicDropdown<int>(
+                  value: _selectedYear,
+                  primary: primary,
+                  isDark: isDark,
+                  items:
+                      years
+                          .map(
+                            (year) => DropdownMenuItem<int>(
+                              value: year,
+                              child: Text(year.toString()),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+
+                    _selectedYear = value;
+                    _updateFocusedDay();
+                  },
                 ),
               ),
 
               const SizedBox(width: 10),
 
-              // Month Dropdown (50% width)
+              // ==================================================
+              // MONTH
+              // ==================================================
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _selectedMonth,
-                      dropdownColor: Theme.of(context).colorScheme.primary,
-                      iconEnabledColor: Colors.white,
-                      style: const TextStyle(color: Colors.white),
-                      onChanged: (val) {
-                        if (val != null) {
-                          _selectedMonth = val;
-                          _updateFocusedDay();
-                        }
-                      },
-                      items: List.generate(12, (i) {
-                        return DropdownMenuItem(
-                          value: i + 1,
-                          child: Text(months[i]),
-                        );
-                      }),
+                child: _CosmicDropdown<int>(
+                  value: _selectedMonth,
+                  primary: primary,
+                  isDark: isDark,
+                  items: List.generate(
+                    12,
+                    (index) => DropdownMenuItem<int>(
+                      value: index + 1,
+                      child: Text(
+                        months[index],
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
+                  onChanged: (value) {
+                    if (value == null) return;
+
+                    _selectedMonth = value;
+                    _updateFocusedDay();
+                  },
                 ),
               ),
             ],
@@ -120,31 +145,198 @@ class _DiaryCalendarState extends State<DiaryCalendar> {
 
         const SizedBox(height: 10),
 
-        // 📆 TableCalendar
+        // ======================================================
+        // CALENDAR
+        // ======================================================
         TableCalendar(
           firstDay: DateTime.utc(1980, 1, 1),
           lastDay: DateTime.utc(2099, 12, 31),
+
           focusedDay: _currentFocusedDay,
-          selectedDayPredicate: (day) => isSameDay(widget.selectedDay, day),
+
+          headerVisible: false,
+
+          availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+
+          selectedDayPredicate: (day) {
+            return isSameDay(widget.selectedDay, day);
+          },
+
+          // ====================================================
+          // DATE SELECTED
+          // ====================================================
           onDaySelected: (selected, focused) {
+            setState(() {
+              _currentFocusedDay = focused;
+              _selectedMonth = focused.month;
+              _selectedYear = focused.year;
+            });
+
             widget.onDaySelected(selected, focused);
           },
-          calendarStyle: CalendarStyle(
-            selectedDecoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              shape: BoxShape.circle,
+
+          // ====================================================
+          // WEEKDAY STYLE
+          // ====================================================
+          daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle: TextStyle(
+              color: isDark ? primary.withOpacity(0.95) : primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
-            todayDecoration: const BoxDecoration(
-              color: Colors.grey,
-              shape: BoxShape.circle,
+            weekendStyle: TextStyle(
+              color: isDark ? primary.withOpacity(0.95) : primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
-          headerVisible: false, // We are using our own header now
-          availableCalendarFormats: const {
-            CalendarFormat.month: 'Month',
-          },
+
+          // ====================================================
+          // CALENDAR STYLE
+          // ====================================================
+          calendarStyle: CalendarStyle(
+            outsideDaysVisible: true,
+
+            defaultTextStyle: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w500,
+            ),
+
+            weekendTextStyle: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w500,
+            ),
+
+            outsideTextStyle: TextStyle(color: mutedTextColor),
+
+            // --------------------------------------------------
+            // SELECTED DAY
+            // --------------------------------------------------
+            selectedDecoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primary,
+              boxShadow:
+                  isDark
+                      ? [
+                        BoxShadow(
+                          color: primary.withOpacity(0.75),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                        BoxShadow(
+                          color: primary.withOpacity(0.30),
+                          blurRadius: 28,
+                          spreadRadius: 5,
+                        ),
+                      ]
+                      : null,
+            ),
+
+            selectedTextStyle: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+
+            // --------------------------------------------------
+            // TODAY
+            // --------------------------------------------------
+            todayDecoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+                  isDark
+                      ? Colors.white.withOpacity(0.10)
+                      : Colors.grey.withOpacity(0.35),
+
+              border: Border.all(color: primary.withOpacity(0.65), width: 1),
+            ),
+
+            todayTextStyle: TextStyle(
+              color: isDark ? Colors.white : theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+
+            cellMargin: const EdgeInsets.all(5),
+          ),
         ),
       ],
+    );
+  }
+}
+
+// ============================================================
+// COSMIC DROPDOWN
+// ============================================================
+
+class _CosmicDropdown<T> extends StatelessWidget {
+  final T value;
+  final Color primary;
+  final bool isDark;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  const _CosmicDropdown({
+    required this.value,
+    required this.primary,
+    required this.isDark,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(13),
+
+        // ======================================================
+        // DARK MODE
+        // ======================================================
+        color: isDark ? primary.withOpacity(0.12) : primary,
+
+        border:
+            isDark
+                ? Border.all(color: primary.withOpacity(0.55), width: 1)
+                : null,
+
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: primary.withOpacity(0.18),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : null,
+      ),
+
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+
+          isExpanded: true,
+
+          dropdownColor: isDark ? const Color(0xFF15111D) : primary,
+
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: isDark ? primary : Colors.white,
+          ),
+
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+
+          items: items,
+
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
 }

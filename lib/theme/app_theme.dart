@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../backgrounds/diary_world/diary_world.dart';
+
 class ThemeProvider extends ChangeNotifier {
+  // ============================================================
+  // STATE
+  // ============================================================
+
   ThemeMode _themeMode = ThemeMode.system;
 
   Color _primaryColor = Colors.deepPurple;
   Color _secondaryColor = Colors.amber;
+
+  /// Current RDiary visual world.
+  ///
+  /// Default:
+  /// Cosmic Universe
+  DiaryWorld _diaryWorld = DiaryWorld.cosmicUniverse;
+
+  // ============================================================
+  // CONSTRUCTOR
+  // ============================================================
 
   ThemeProvider() {
     _loadPreferences();
@@ -21,11 +37,25 @@ class ThemeProvider extends ChangeNotifier {
 
   Color get secondaryColor => _secondaryColor;
 
-  bool get useSystemTheme =>
-      _themeMode == ThemeMode.system;
+  DiaryWorld get diaryWorld => _diaryWorld;
 
-  bool get isDarkMode =>
-      _themeMode == ThemeMode.dark;
+  bool get useSystemTheme => _themeMode == ThemeMode.system;
+
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  // ============================================================
+  // DIARY WORLD
+  // ============================================================
+
+  Future<void> setDiaryWorld(DiaryWorld world) async {
+    if (_diaryWorld == world) return;
+
+    _diaryWorld = world;
+
+    notifyListeners();
+
+    await _savePreferences();
+  }
 
   // ============================================================
   // LIGHT THEME
@@ -68,8 +98,7 @@ class ThemeProvider extends ChangeNotifier {
   // ============================================================
 
   void toggleTheme(bool isDark) {
-    _themeMode =
-    isDark ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
 
     _savePreferences();
 
@@ -82,19 +111,13 @@ class ThemeProvider extends ChangeNotifier {
 
   void setSystemTheme(bool enabled) {
     if (enabled) {
-      // Follow Android/iOS theme automatically.
       _themeMode = ThemeMode.system;
     } else {
-      // When system mode is turned OFF,
-      // use the phone's CURRENT appearance as the
-      // starting manual theme.
       final brightness =
           WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
       _themeMode =
-      brightness == Brightness.dark
-          ? ThemeMode.dark
-          : ThemeMode.light;
+      brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
     }
 
     _savePreferences();
@@ -131,15 +154,13 @@ class ThemeProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> _loadPreferences() async {
-    final prefs =
-    await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     // ----------------------------------------------------------
     // THEME MODE
     // ----------------------------------------------------------
 
-    final savedThemeMode =
-    prefs.getString('themeMode');
+    final savedThemeMode = prefs.getString('themeMode');
 
     switch (savedThemeMode) {
       case 'light':
@@ -155,19 +176,11 @@ class ThemeProvider extends ChangeNotifier {
         break;
 
       default:
-      // First installation / old preference format.
-      //
-      // Check whether the old "isDark" setting exists.
         if (prefs.containsKey('isDark')) {
-          final oldIsDark =
-              prefs.getBool('isDark') ?? false;
+          final oldIsDark = prefs.getBool('isDark') ?? false;
 
-          _themeMode =
-          oldIsDark
-              ? ThemeMode.dark
-              : ThemeMode.light;
+          _themeMode = oldIsDark ? ThemeMode.dark : ThemeMode.light;
         } else {
-          // Brand-new users follow the phone automatically.
           _themeMode = ThemeMode.system;
         }
     }
@@ -177,18 +190,30 @@ class ThemeProvider extends ChangeNotifier {
     // ----------------------------------------------------------
 
     final primaryColorValue =
-        prefs.getInt('primaryColor') ??
-            Colors.deepPurple.value;
+        prefs.getInt('primaryColor') ?? Colors.deepPurple.value;
 
     final secondaryColorValue =
-        prefs.getInt('secondaryColor') ??
-            Colors.amber.value;
+        prefs.getInt('secondaryColor') ?? Colors.amber.value;
 
-    _primaryColor =
-        Color(primaryColorValue);
+    _primaryColor = Color(primaryColorValue);
 
-    _secondaryColor =
-        Color(secondaryColorValue);
+    _secondaryColor = Color(secondaryColorValue);
+
+    // ----------------------------------------------------------
+    // DIARY WORLD
+    // ----------------------------------------------------------
+
+    final savedDiaryWorld = prefs.getString('diaryWorld');
+
+    if (savedDiaryWorld != null) {
+      _diaryWorld = DiaryWorld.values.firstWhere(
+            (world) => world.name == savedDiaryWorld,
+        orElse: () => DiaryWorld.cosmicUniverse,
+      );
+    } else {
+      // Existing users/default installation start with Cosmic.
+      _diaryWorld = DiaryWorld.cosmicUniverse;
+    }
 
     notifyListeners();
   }
@@ -198,8 +223,7 @@ class ThemeProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> _savePreferences() async {
-    final prefs =
-    await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     String themeModeValue;
 
@@ -217,10 +241,7 @@ class ThemeProvider extends ChangeNotifier {
         break;
     }
 
-    await prefs.setString(
-      'themeMode',
-      themeModeValue,
-    );
+    await prefs.setString('themeMode', themeModeValue);
 
     await prefs.setInt(
       'primaryColor',
@@ -230,6 +251,12 @@ class ThemeProvider extends ChangeNotifier {
     await prefs.setInt(
       'secondaryColor',
       _secondaryColor.value,
+    );
+
+    // Save selected visual world.
+    await prefs.setString(
+      'diaryWorld',
+      _diaryWorld.name,
     );
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/goal.dart';
+import '../../theme/app_theme.dart';
+import '../../backgrounds/diary_world/diary_world.dart';
+
+import 'widgets/goal_card.dart';
 
 class GoalsSection extends StatelessWidget {
   final List<Goal> goals;
@@ -17,213 +19,217 @@ class GoalsSection extends StatelessWidget {
     required this.refreshCallback,
   });
 
-  /// Normalize date (removes time completely)
+  // ═══════════════════════════════════════════════════════════════
+  // 📅 DATE HELPERS
+  // ═══════════════════════════════════════════════════════════════
+
   DateTime _normalize(DateTime date) {
-    return DateTime(date.year, date.month, date.day);
-  }
-
-  /// DELETE GOAL
-  Future<void> _deleteGoal(BuildContext context, Goal goal) async {
-    final theme = Theme.of(context);
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            "Delete Goal?",
-            style: TextStyle(color: theme.colorScheme.onSurface),
-          ),
-          content: Text(
-            "Are you sure you want to delete this goal?",
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text(
-                "Cancel",
-                style: TextStyle(color: theme.colorScheme.primary),
-              ),
-              onPressed: () => Navigator.pop(context, false),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white, // 👈 THIS FIXES IT
-              ),
-              child: const Text("Delete"),
-              onPressed: () => Navigator.pop(context, true),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .collection('goals')
-          .doc(goal.id)
-          .delete();
-
-      refreshCallback();
-    }
-  }
-
-  Widget _buildGoalCard(BuildContext context, Goal goal) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final surface = theme.colorScheme.surface;
-    final onSurface = theme.colorScheme.onSurface;
-
-    final selected = _normalize(selectedDay);
-    final dateKey = DateFormat('yyyy-MM-dd').format(selected);
-
-    final isCompleted = goal.completedDates.contains(dateKey);
-
-    return GestureDetector(
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        _deleteGoal(context, goal);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: primary.withOpacity(isCompleted ? 0.4 : 0.8),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withOpacity(isCompleted ? 0.15 : 0.3),
-              blurRadius: 12,
-            ),
-          ],
-          color: surface,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
-            children: [
-              Transform.scale(
-                scale: 1.1,
-                child: Checkbox(
-                  value: isCompleted,
-                  activeColor: primary,
-                  side: BorderSide(color: primary, width: 1.5),
-                  onChanged: (val) async {
-                    final user = FirebaseAuth.instance.currentUser;
-
-                    final updatedDates =
-                    List<String>.from(goal.completedDates);
-
-                    if (val == true) {
-                      if (!updatedDates.contains(dateKey)) {
-                        updatedDates.add(dateKey);
-                      }
-                    } else {
-                      updatedDates.remove(dateKey);
-                    }
-
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user!.uid)
-                        .collection('goals')
-                        .doc(goal.id)
-                        .update({'completedDates': updatedDates});
-
-                    refreshCallback();
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: isCompleted
-                        ? onSurface.withOpacity(0.5)
-                        : onSurface,
-                    decoration: isCompleted
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                  ),
-                  child: Text(goal.title),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🎯 GOALS SECTION
+  // ═══════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
-    if (goals.isEmpty) return const SizedBox();
+    if (goals.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    final selected = _normalize(selectedDay);
+    // ============================================================
+    // APP THEME
+    // ============================================================
 
-    final visibleGoals = goals.where((goal) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final primary = colors.primary;
 
-      if (goal.startDate == null) return true;
+    final isDark =
+        theme.brightness == Brightness.dark;
 
-      final start = _normalize(goal.startDate!);
+    // ============================================================
+    // DIARY WORLD
+    // ============================================================
 
-      // Hide before start date
+    final themeProvider =
+    context.watch<ThemeProvider>();
+
+    final selectedWorld =
+        themeProvider.diaryWorld;
+
+    final worldEnabled =
+        selectedWorld != DiaryWorld.simple;
+
+    final isCosmic =
+        selectedWorld == DiaryWorld.cosmicUniverse;
+
+    final isCosmicDark =
+        isCosmic && isDark;
+
+    final isCosmicLight =
+        isCosmic && !isDark;
+
+    final selected =
+    _normalize(selectedDay);
+
+    // ============================================================
+    // ACTIVE GOALS
+    // ============================================================
+
+    final visibleGoals =
+    goals.where((goal) {
+      if (goal.startDate == null) {
+        return true;
+      }
+
+      final start =
+      _normalize(goal.startDate!);
+
       if (selected.isBefore(start)) {
         return false;
       }
 
       if (goal.deadline != null) {
-        final end = _normalize(goal.deadline!);
+        final end =
+        _normalize(goal.deadline!);
 
-        // Show ON end date, hide only AFTER
         if (selected.isAfter(end)) {
           return false;
         }
       }
 
       return true;
-
     }).toList();
 
-    if (visibleGoals.isEmpty) return const SizedBox();
+    if (visibleGoals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // ============================================================
+    // HEADER TEXT COLOR
+    // ============================================================
+
+    final Color headerColor;
+
+    if (isCosmicDark) {
+      headerColor = Colors.white;
+    } else if (isCosmicLight) {
+      // Dark readable text over daytime Cosmic artwork.
+      headerColor = colors.onSurface;
+    } else {
+      headerColor = colors.onSurface;
+    }
+
+    // ============================================================
+    // BUILD
+    // ============================================================
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+
       children: [
-        Text(
-          "Goals",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onBackground,
-          ),
+        // ========================================================
+        // 🎯 SECTION HEADER
+        // ========================================================
+
+        Row(
+          children: [
+            // ----------------------------------------------------
+            // WORLD ACCENT DOT
+            //
+            // Show for any visual Diary World.
+            // Theme-less remains clean.
+            // ----------------------------------------------------
+
+            if (worldEnabled) ...[
+              Container(
+                width: 5,
+                height: 5,
+
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primary,
+
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(
+                        isCosmicDark
+                            ? 0.75
+                            : 0.35,
+                      ),
+                      blurRadius:
+                      isCosmicDark ? 7 : 4,
+                      spreadRadius:
+                      isCosmicDark ? 1 : 0,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+            ],
+
+            Text(
+              'Goals',
+
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: headerColor,
+
+                // Dark Cosmic gets a tiny readability shadow.
+                shadows: isCosmicDark
+                    ? [
+                  Shadow(
+                    color: Colors.black
+                        .withOpacity(0.55),
+                    blurRadius: 5,
+                  ),
+                ]
+                    : null,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 8),
+
+        // ========================================================
+        // 🎯 GOAL CARDS
+        // ========================================================
+
         ListView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: visibleGoals.length,
-          itemBuilder: (_, i) {
-            return _buildGoalCard(context, visibleGoals[i]);
+          physics:
+          const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+
+          itemCount:
+          visibleGoals.length,
+
+          itemBuilder:
+              (context, index) {
+            return GoalCard(
+              goal:
+              visibleGoals[index],
+
+              selectedDay:
+              selectedDay,
+
+              refreshCallback:
+              refreshCallback,
+            );
           },
         ),
-        const SizedBox(height: 20),
+
+        const SizedBox(height: 4),
       ],
     );
   }

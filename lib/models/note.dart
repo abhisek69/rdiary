@@ -9,6 +9,8 @@ class Note {
   final String? mood;
   final List<String>? drawingPaths;
   final String? status;
+  final String? drawingData; 
+  final String? drawingPreviewUrl;
 
   const Note({
     required this.id,
@@ -19,6 +21,8 @@ class Note {
     this.mood,
     this.drawingPaths,
     this.status,
+    this.drawingData,
+    this.drawingPreviewUrl,
   });
 
   // FROM FIRESTORE
@@ -29,11 +33,14 @@ class Note {
       content: data['content'],
       date: (data['date'] as Timestamp).toDate(),
       imagePath: data['imagePath'],
-      drawingPaths: data['drawingPaths'] != null
-          ? List<String>.from(data['drawingPaths'])
-          : [],
+      drawingPaths:
+          data['drawingPaths'] != null
+              ? List<String>.from(data['drawingPaths'])
+              : (data['images'] != null ? List<String>.from(data['images']) : []),
       mood: data['mood'],
       status: data['status'],
+      drawingData: data['drawingData'],
+      drawingPreviewUrl: data['drawingPreviewUrl'],
     );
   }
 
@@ -47,6 +54,8 @@ class Note {
       'drawingPaths': drawingPaths,
       'mood': mood,
       'status': status,
+      'drawingData': drawingData,
+      'drawingPreviewUrl': drawingPreviewUrl,
     };
   }
 
@@ -59,6 +68,8 @@ class Note {
     String? mood,
     List<String>? drawingPaths,
     String? status,
+    String? drawingData,
+    String? drawingPreviewUrl,
   }) {
     return Note(
       id: id,
@@ -69,6 +80,8 @@ class Note {
       mood: mood ?? this.mood,
       drawingPaths: drawingPaths ?? this.drawingPaths,
       status: status ?? this.status,
+      drawingData: drawingData ?? this.drawingData,
+      drawingPreviewUrl: drawingPreviewUrl ?? this.drawingPreviewUrl,
     );
   }
 }
