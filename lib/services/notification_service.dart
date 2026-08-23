@@ -3,8 +3,9 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -22,23 +23,68 @@ class NotificationService {
   // ============================================================
 
   static Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    debugPrint('[RDIARY][NOTIFICATION] Initializing notification service...');
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const initSettings = InitializationSettings(android: androidSettings);
+      const initSettings = InitializationSettings(android: androidSettings);
 
-    await _notificationsPlugin.initialize(initSettings);
+      await _notificationsPlugin.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: (details) {
+          debugPrint('[RDIARY][NOTIFICATION] Notification response received: ${details.payload}');
+        },
+      );
 
-    // Load timezone database.
-    tz.initializeTimeZones();
+      // Load timezone database.
+      tz.initializeTimeZones();
 
-    // Currently RDiary uses India timezone.
-    // Later this can be changed to automatic device detection.
-    tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+      // Detect local timezone
+      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
 
-    debugPrint('🌍 Timezone: ${tz.local.name}');
-    debugPrint('🕐 RDiary time: ${tz.TZDateTime.now(tz.local)}');
+      debugPrint('[RDIARY][NOTIFICATION] Initialization SUCCESS');
+      debugPrint('[RDIARY][NOTIFICATION] Device timezone: ${tz.local.name}');
+      debugPrint('[RDIARY][NOTIFICATION] Current local time: ${tz.TZDateTime.now(tz.local)}');
+    } catch (e) {
+      debugPrint('[RDIARY][NOTIFICATION] Initialization FAILED: $e');
+    }
+  }
+
+  // ============================================================
+  // DIAGNOSTICS
+  // ============================================================
+
+  static Future<void> runDiagnostics() async {
+    debugPrint('[RDIARY][NOTIFICATION] ===== NOTIFICATION DIAGNOSTICS =====');
+    debugPrint('[RDIARY][NOTIFICATION] Android version: ${Platform.operatingSystemVersion}');
+    debugPrint('[RDIARY][NOTIFICATION] App build mode: ${kReleaseMode ? 'RELEASE' : 'DEBUG'}');
+    
+    final notifStatus = await Permission.notification.status;
+    debugPrint('[RDIARY][NOTIFICATION] Notification permission: ${notifStatus.name}');
+    
+    if (Platform.isAndroid) {
+      final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+      debugPrint('[RDIARY][NOTIFICATION] Exact alarm permission: ${exactAlarmStatus.name}');
+    }
+    
+    debugPrint('[RDIARY][NOTIFICATION] Timezone: ${tz.local.name}');
+    debugPrint('[RDIARY][NOTIFICATION] Current time: ${tz.TZDateTime.now(tz.local)}');
+    
+    await logPendingNotifications();
+    debugPrint('[RDIARY][NOTIFICATION] =====================================');
+  }
+
+  static Future<void> logPendingNotifications() async {
+    try {
+      final List<PendingNotificationRequest> pending = await _notificationsPlugin.pendingNotificationRequests();
+      debugPrint('[RDIARY][NOTIFICATION] Pending notifications: ${pending.length}');
+      for (var req in pending) {
+        debugPrint('  - ID: ${req.id} | Title: ${req.title}');
+      }
+    } catch (e) {
+      debugPrint('[RDIARY][NOTIFICATION] Error listing pending notifications: $e');
+    }
   }
 
   // ============================================================
@@ -48,10 +94,14 @@ class NotificationService {
   static Future<void> requestPermission() async {
     if (!Platform.isAndroid) return;
 
+    debugPrint('[RDIARY][NOTIFICATION] Requesting notification permission...');
     final status = await Permission.notification.status;
 
     if (!status.isGranted) {
-      await Permission.notification.request();
+      final result = await Permission.notification.request();
+      debugPrint('[RDIARY][NOTIFICATION] Notification permission result: ${result.name}');
+    } else {
+      debugPrint('[RDIARY][NOTIFICATION] Notification permission: ALREADY GRANTED');
     }
   }
 
@@ -62,15 +112,22 @@ class NotificationService {
   static Future<bool> requestExactAlarmPermission() async {
     if (!Platform.isAndroid) return true;
 
-    final androidPlugin =
-        _notificationsPlugin
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >();
+    debugPrint('[RDIARY][NOTIFICATION] Checking exact alarm permission...');
+    
+    final status = await Permission.scheduleExactAlarm.status;
+    if (status.isGranted) {
+      debugPrint('[RDIARY][NOTIFICATION] Exact alarm permission: ALREADY GRANTED');
+      return true;
+    }
+
+    debugPrint('[RDIARY][NOTIFICATION] Exact alarm permission ${status.name}. Requesting...');
+    
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
     final granted = await androidPlugin?.requestExactAlarmsPermission();
 
-    debugPrint('⏰ Exact alarm permission: $granted');
+    debugPrint('[RDIARY][NOTIFICATION] Exact alarm permission result: ${granted == true ? 'GRANTED' : 'DENIED'}');
 
     return granted ?? false;
   }
@@ -80,6 +137,7 @@ class NotificationService {
   // ============================================================
 
   static Future<void> showWelcomeNotification() async {
+    debugPrint('[RDIARY][NOTIFICATION] Triggering welcome notification...');
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'rdiary_welcome_channel',
@@ -96,7 +154,7 @@ class NotificationService {
       'It\'s great to see you again. Let\'s make today productive!',
       details,
     );
-    debugPrint('🚀 Welcome notification triggered.');
+    debugPrint('[RDIARY][NOTIFICATION] Welcome notification SUCCESS');
   }
 
   // ============================================================
@@ -105,9 +163,10 @@ class NotificationService {
 
   static Future<void> scheduleTestGoalReminder5Min() async {
     try {
+      debugPrint('[RDIARY][NOTIFICATION] Scheduling test reminders...');
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        debugPrint('❌ Test Goal: No user logged in.');
+        debugPrint('[RDIARY][NOTIFICATION] Test Goal FAILED: No user logged in.');
         return;
       }
 
@@ -126,12 +185,12 @@ class NotificationService {
 
       final now = tz.TZDateTime.now(tz.local);
 
-      // Schedule 6 notifications, each 5 minutes apart (covers next 30 mins)
       for (int i = 1; i <= 6; i++) {
         final scheduledTime = now.add(Duration(minutes: 5 * i));
+        final id = 888 + i;
 
         await _notificationsPlugin.zonedSchedule(
-          888 + i,
+          id,
           'Goal Reminder (Test $i) 🎯',
           'Don\'t forget: $goalName',
           scheduledTime,
@@ -149,186 +208,85 @@ class NotificationService {
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
         );
-        debugPrint('🔔 Test reminder $i scheduled for: $scheduledTime');
+        debugPrint('[RDIARY][NOTIFICATION] Test reminder scheduled | id: $id | time: $scheduledTime');
       }
+      debugPrint('[RDIARY][NOTIFICATION] Test reminders scheduled SUCCESS');
     } catch (e) {
-      debugPrint('❌ Test goal reminder failed: $e');
+      debugPrint('[RDIARY][NOTIFICATION] Test reminders FAILED: $e');
     }
   }
 
   // ############################################################
-  //
   //                     GOAL REMINDERS
-  //
   // ############################################################
-
-  // ============================================================
-  // 7-DAY GOAL REMINDER ENGINE
-  // ============================================================
 
   static Future<void> scheduleUpcomingGoalReminders({int daysAhead = 7}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
-        debugPrint('❌ Goal reminders: No logged-in user.');
+        debugPrint('[RDIARY][NOTIFICATION] Goal reminders FAILED: No user.');
         return;
       }
 
-      debugPrint('');
-      debugPrint('========================================');
-      debugPrint('🎯 RDIARY GOAL REMINDER ENGINE');
-      debugPrint('========================================');
+      debugPrint('[RDIARY][NOTIFICATION] Scheduling upcoming goal reminders...');
 
-      // --------------------------------------------------------
-      // GET USER GOALS
-      // --------------------------------------------------------
+      final goalsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('goals')
+          .get();
 
-      final goalsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('goals')
-              .get();
+      debugPrint('[RDIARY][FIRESTORE] Goals found: ${goalsSnapshot.docs.length}');
 
-      debugPrint('📋 Firestore goals found: ${goalsSnapshot.docs.length}');
-
-      // Remove old goal reminders before rebuilding.
       await cancelGoalReminders();
 
       if (goalsSnapshot.docs.isEmpty) {
-        debugPrint('😴 User currently has no goals.');
+        debugPrint('[RDIARY][NOTIFICATION] No goals to schedule.');
         return;
       }
 
       const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
       final now = tz.TZDateTime.now(tz.local);
-
       int totalScheduled = 0;
 
-      // --------------------------------------------------------
-      // TODAY + NEXT 6 DAYS
-      // --------------------------------------------------------
-
       for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
-        final targetDate = tz.TZDateTime(
-          tz.local,
-          now.year,
-          now.month,
-          now.day + dayOffset,
-        );
-
+        final targetDate = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset);
         final weekday = dayNames[targetDate.weekday - 1];
-
-        final dateText =
-            '${targetDate.year}-'
-            '${targetDate.month.toString().padLeft(2, '0')}-'
-            '${targetDate.day.toString().padLeft(2, '0')}';
-
-        debugPrint('');
-        debugPrint('----------------------------------------');
-        debugPrint('📅 $dateText ($weekday)');
 
         final List<String> goalsForThisDay = [];
 
-        // ------------------------------------------------------
-        // FIND GOALS FOR THIS DATE
-        // ------------------------------------------------------
-
         for (final goalDoc in goalsSnapshot.docs) {
           final data = goalDoc.data();
-
           final title = data['title']?.toString().trim() ?? '';
+          if (title.isEmpty) continue;
 
-          if (title.isEmpty) {
-            continue;
-          }
-
-          // ----------------------------------------------------
-          // ENTIRE GOAL COMPLETED
-          // ----------------------------------------------------
-
-          final isCompleted = data['isCompleted'] as bool? ?? false;
-
-          if (isCompleted) {
-            debugPrint('✅ "$title" skipped — entire goal completed.');
-            continue;
-          }
-
-          // ----------------------------------------------------
-          // WEEKDAY CHECK
-          // ----------------------------------------------------
+          if (data['isCompleted'] as bool? ?? false) continue;
 
           final goalDays = List<String>.from(data['goalDays'] ?? []);
+          if (!goalDays.contains(weekday)) continue;
 
-          if (!goalDays.contains(weekday)) {
-            continue;
-          }
-
-          final targetDateOnly = DateTime(
-            targetDate.year,
-            targetDate.month,
-            targetDate.day,
-          );
-
-          // ----------------------------------------------------
-          // START DATE CHECK
-          // ----------------------------------------------------
-
+          final targetDateOnly = DateTime(targetDate.year, targetDate.month, targetDate.day);
           final startTimestamp = data['startDate'] as Timestamp?;
-
           if (startTimestamp != null) {
             final start = startTimestamp.toDate();
-
-            final startDateOnly = DateTime(start.year, start.month, start.day);
-
-            if (targetDateOnly.isBefore(startDateOnly)) {
-              continue;
-            }
+            if (targetDateOnly.isBefore(DateTime(start.year, start.month, start.day))) continue;
           }
-
-          // ----------------------------------------------------
-          // DEADLINE CHECK
-          // ----------------------------------------------------
 
           final deadlineTimestamp = data['deadline'] as Timestamp?;
-
           if (deadlineTimestamp != null) {
             final deadline = deadlineTimestamp.toDate();
-
-            final deadlineDateOnly = DateTime(
-              deadline.year,
-              deadline.month,
-              deadline.day,
-            );
-
-            if (targetDateOnly.isAfter(deadlineDateOnly)) {
-              continue;
-            }
+            if (targetDateOnly.isAfter(DateTime(deadline.year, deadline.month, deadline.day))) continue;
           }
 
-          // Goal is active for this day.
           goalsForThisDay.add(title);
         }
 
-        // ------------------------------------------------------
-        // NO GOALS TODAY
-        // ------------------------------------------------------
-
-        if (goalsForThisDay.isEmpty) {
-          debugPrint('😴 No active goals scheduled for $weekday.');
-          continue;
-        }
-
-        debugPrint('🎯 Goals: ${goalsForThisDay.join(', ')}');
+        if (goalsForThisDay.isEmpty) continue;
 
         final messages = _generateMotivationalMessages(goalsForThisDay);
 
-        // ------------------------------------------------------
-        // 8:30 AM — MORNING
-        // ------------------------------------------------------
-
+        // Morning 8:30 AM
         if (await _scheduleGoalNotification(
           id: _goalNotificationId(targetDate, 1),
           date: targetDate,
@@ -336,14 +294,9 @@ class NotificationService {
           minute: 30,
           title: 'Good Morning ☀️',
           message: messages['morning']!,
-        )) {
-          totalScheduled++;
-        }
+        )) totalScheduled++;
 
-        // ------------------------------------------------------
-        // 1:00 PM — MIDDAY
-        // ------------------------------------------------------
-
+        // Midday 1:00 PM
         if (await _scheduleGoalNotification(
           id: _goalNotificationId(targetDate, 2),
           date: targetDate,
@@ -351,14 +304,9 @@ class NotificationService {
           minute: 0,
           title: 'Keep Going 🎯',
           message: messages['midday']!,
-        )) {
-          totalScheduled++;
-        }
+        )) totalScheduled++;
 
-        // ------------------------------------------------------
-        // 6:30 PM — EVENING
-        // ------------------------------------------------------
-
+        // Evening 6:30 PM
         if (await _scheduleGoalNotification(
           id: _goalNotificationId(targetDate, 3),
           date: targetDate,
@@ -366,14 +314,9 @@ class NotificationService {
           minute: 30,
           title: 'Your Goals Are Waiting 💜',
           message: messages['evening']!,
-        )) {
-          totalScheduled++;
-        }
+        )) totalScheduled++;
 
-        // ------------------------------------------------------
-        // 9:30 PM — NIGHT
-        // ------------------------------------------------------
-
+        // Night 9:30 PM
         if (await _scheduleGoalNotification(
           id: _goalNotificationId(targetDate, 4),
           date: targetDate,
@@ -381,153 +324,40 @@ class NotificationService {
           minute: 30,
           title: 'How Was Your Day? 🌙',
           message: messages['night']!,
-        )) {
-          totalScheduled++;
-        }
+        )) totalScheduled++;
       }
 
-      debugPrint('');
-      debugPrint('========================================');
-      debugPrint('✅ $totalScheduled goal reminders scheduled.');
-      debugPrint('========================================');
+      debugPrint('[RDIARY][NOTIFICATION] Goal reminders scheduled: $totalScheduled');
     } catch (e, stackTrace) {
-      debugPrint('❌ Goal reminder scheduling failed: $e');
-
+      debugPrint('[RDIARY][NOTIFICATION] Goal reminders FAILED: $e');
       debugPrint('$stackTrace');
     }
   }
 
-  // ============================================================
-  // GOAL MOTIVATIONAL MESSAGE ENGINE
-  // ============================================================
-
   static Map<String, String> _generateMotivationalMessages(List<String> goals) {
     final random = Random();
-
-    String randomGoal() {
-      return goals[random.nextInt(goals.length)];
-    }
-
+    String randomGoal() => goals[random.nextInt(goals.length)];
     final goalCount = goals.length;
 
-    // ----------------------------------------------------------
-    // MORNING MESSAGES
-    // ----------------------------------------------------------
-
     final morningMessages = [
-      'Good morning 💜 You have $goalCount '
-          'goal${goalCount > 1 ? 's' : ''} today. '
-          'Let\'s make today count.',
-
-      'New day, new opportunity 🌅 '
-          'Don\'t forget about ${randomGoal()}.',
-
-      'Small steps create big changes. '
-          'Give ${randomGoal()} some time today 💜',
-
-      'You made a promise to yourself. '
-          '${randomGoal()} is part of that promise 🎯',
-
-      'Fresh day. Fresh energy. '
-          'Your goals are waiting for you ☀️',
-
-      'Your future self is built by what you do today. '
-          'Start with ${randomGoal()}.',
-
-      'Good morning 🌅 No pressure to be perfect. '
-          'Just make a little progress today.',
-
-      'Hey, you\'ve got this 💜 '
-          'Maybe start your day with ${randomGoal()}.',
+      'Good morning 💜 You have $goalCount goal${goalCount > 1 ? 's' : ''} today.',
+      'New day, new opportunity 🌅 Don\'t forget about ${randomGoal()}.',
+      'Small steps create big changes. Give ${randomGoal()} some time today 💜',
     ];
-
-    // ----------------------------------------------------------
-    // MIDDAY MESSAGES
-    // ----------------------------------------------------------
 
     final middayMessages = [
-      'Hey 👀 Don\'t forget about ${randomGoal()}. '
-          'You\'ve still got plenty of time.',
-
-      'How\'s the day going? 💜 '
-          'Your goals haven\'t forgotten about you.',
-
-      'Quick reminder 🎯 Even 10 focused minutes on '
-          '${randomGoal()} counts.',
-
-      'Half the day may be gone, '
-          'but the opportunity isn\'t. Keep moving 💪',
-
-      'Don\'t forget the things you care about. '
-          '${randomGoal()} deserves a little attention today.',
-
-      'A small win is still a win. '
-          'How about making some progress on ${randomGoal()}?',
-
-      'Hey 👋 Remember why you started. Keep going.',
-
-      'Your hobbies and goals need a little love too 💜 '
-          'How about ${randomGoal()}?',
+      'Hey 👀 Don\'t forget about ${randomGoal()}. You\'ve still got plenty of time.',
+      'How\'s the day going? 💜 Your goals haven\'t forgotten about you.',
     ];
-
-    // ----------------------------------------------------------
-    // EVENING MESSAGES
-    // ----------------------------------------------------------
 
     final eveningMessages = [
-      'The day isn\'t over yet 🌆 '
-          'There\'s still time for ${randomGoal()}.',
-
-      'A little progress tonight '
-          'can make tomorrow feel better 💜',
-
-      'Busy day? That\'s okay. '
-          'Even one small step toward ${randomGoal()} counts.',
-
-      'Don\'t let a busy day make you forget '
-          'what matters to you 🎯',
-
-      'You don\'t have to finish everything. '
-          'Just don\'t stop moving forward 💜',
-
-      'One focused session. One small win. '
-          'That\'s enough to keep moving.',
-
-      'Still some time left 🌆 '
-          'Maybe give ${randomGoal()} a little attention.',
-
-      'Hey 👋 Your day isn\'t finished yet. '
-          '${randomGoal()} is still waiting for you.',
+      'The day isn\'t over yet 🌆 There\'s still time for ${randomGoal()}.',
+      'A little progress tonight can make tomorrow feel better 💜',
     ];
 
-    // ----------------------------------------------------------
-    // NIGHT MESSAGES
-    // ----------------------------------------------------------
-
     final nightMessages = [
-      'How did today go? 🌙 '
-          'Did you get a chance to work on ${randomGoal()}?',
-
-      'Life gets hard sometimes, '
-          'but we keep moving 💜',
-
-      'Before the day ends, remember that '
-          'every small effort counts.',
-
-      'Maybe today wasn\'t perfect — '
-          'it doesn\'t need to be. Keep going 🌙',
-
-      'Did you make progress on ${randomGoal()} today? '
-          'If not, tomorrow is another chance 💜',
-
-      'One difficult day doesn\'t define your journey. '
-          'Rest, reset, continue.',
-
-      'Another day almost complete 🌙 '
-          'Consistency beats perfection.',
-
-      'Whatever happened today, don\'t give up on yourself. '
-          'Tomorrow we keep rolling 💜',
+      'How did today go? 🌙 Did you get a chance to work on ${randomGoal()}?',
+      'Consistency beats perfection. Tomorrow we keep rolling 💜',
     ];
 
     return {
@@ -538,10 +368,6 @@ class NotificationService {
     };
   }
 
-  // ============================================================
-  // SCHEDULE ONE GOAL NOTIFICATION
-  // ============================================================
-
   static Future<bool> _scheduleGoalNotification({
     required int id,
     required tz.TZDateTime date,
@@ -551,258 +377,81 @@ class NotificationService {
     required String message,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
+    final scheduledTime = tz.TZDateTime(tz.local, date.year, date.month, date.day, hour, minute);
 
-    final scheduledTime = tz.TZDateTime(
-      tz.local,
-      date.year,
-      date.month,
-      date.day,
-      hour,
-      minute,
-    );
+    if (!scheduledTime.isAfter(now)) return false;
 
-    // Never schedule reminders in the past.
-    if (!scheduledTime.isAfter(now)) {
-      debugPrint(
-        '⏭️ Goal reminder skipped — '
-        '$scheduledTime already passed.',
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        message,
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rdiary_goal_reminders_v2',
+            'RDiary Goal Reminders',
+            channelDescription: 'Motivational reminders for your goals',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
-
+      debugPrint('[RDIARY][NOTIFICATION] Goal reminder scheduled | id: $id | time: $scheduledTime');
+      return true;
+    } catch (e) {
+      debugPrint('[RDIARY][NOTIFICATION] Goal reminder FAILED | id: $id | error: $e');
       return false;
     }
-
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      message,
-      scheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'rdiary_goal_reminders_v2',
-          'RDiary Goal Reminders',
-          channelDescription: 'Motivational reminders for your goals',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
-
-    debugPrint('🔔 $scheduledTime → $title');
-
-    debugPrint('💬 $message');
-
-    return true;
   }
-
-  // ============================================================
-  // UNIQUE GOAL NOTIFICATION ID
-  // ============================================================
 
   static int _goalNotificationId(tz.TZDateTime date, int slot) {
-    // Slot:
-    // 1 = Morning
-    // 2 = Midday
-    // 3 = Evening
-    // 4 = Night
-
-    return ((date.year % 100) * 1000000) +
-        (date.month * 10000) +
-        (date.day * 100) +
-        slot;
+    return ((date.year % 100) * 1000000) + (date.month * 10000) + (date.day * 100) + slot;
   }
-
-  // ============================================================
-  // CANCEL UPCOMING GOAL REMINDERS
-  // ============================================================
 
   static Future<void> cancelGoalReminders({int daysAhead = 14}) async {
     final now = tz.TZDateTime.now(tz.local);
-
     for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
-      final date = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day + dayOffset,
-      );
-
+      final date = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset);
       for (int slot = 1; slot <= 4; slot++) {
         await _notificationsPlugin.cancel(_goalNotificationId(date, slot));
       }
     }
-
-    debugPrint('🧹 Previous goal reminders cleared.');
+    debugPrint('[RDIARY][NOTIFICATION] Previous goal reminders cleared.');
   }
 
   // ############################################################
-  //
   //                     DIARY REMINDERS
-  //
   // ############################################################
 
-  // ============================================================
-  // 7-DAY DIARY REMINDER ENGINE
-  // ============================================================
-  //
-  // Schedules:
-  //
-  // 12:00 PM
-  // 06:00 PM
-  // 10:00 PM
-  //
-  // for today + next 6 days.
-  //
-  // ============================================================
-
-  static Future<void> scheduleUpcomingDiaryReminders({
-    int daysAhead = 7,
-  }) async {
+  static Future<void> scheduleUpcomingDiaryReminders({int daysAhead = 7}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-      if (user == null) {
-        debugPrint('❌ Diary reminders: No logged-in user.');
-        return;
-      }
-
-      final now = tz.TZDateTime.now(tz.local);
-
-      final random = Random();
-
-      debugPrint('');
-      debugPrint('========================================');
-      debugPrint('📖 RDIARY DIARY REMINDER ENGINE');
-      debugPrint('========================================');
-
-      // Remove previous diary schedule before rebuilding.
+      debugPrint('[RDIARY][NOTIFICATION] Scheduling upcoming diary reminders...');
       await cancelUpcomingDiaryReminders(daysAhead: 14);
 
       int totalScheduled = 0;
-
-      // --------------------------------------------------------
-      // TODAY + NEXT 6 DAYS
-      // --------------------------------------------------------
+      final now = tz.TZDateTime.now(tz.local);
+      final random = Random();
 
       for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
-        final targetDate = tz.TZDateTime(
-          tz.local,
-          now.year,
-          now.month,
-          now.day + dayOffset,
-        );
-
-        final dateText =
-            '${targetDate.year}-'
-            '${targetDate.month.toString().padLeft(2, '0')}-'
-            '${targetDate.day.toString().padLeft(2, '0')}';
-
-        debugPrint('');
-        debugPrint('----------------------------------------');
-        debugPrint('📖 Diary date: $dateText');
-
-        // ------------------------------------------------------
-        // CHECK TODAY'S DIARY
-        // ------------------------------------------------------
-        //
-        // We only need to check today here.
-        //
-        // Future dates cannot have entries yet.
-        // ------------------------------------------------------
+        final targetDate = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset);
 
         if (dayOffset == 0) {
-          final hasWrittenToday = await _hasDiaryEntryForDate(
-            user.uid,
-            targetDate,
-          );
-
-          if (hasWrittenToday) {
-            debugPrint('💜 Diary already written today.');
-
+          if (await _hasDiaryEntryForDate(user.uid, targetDate)) {
+            debugPrint('[RDIARY][NOTIFICATION] Diary already written today. Skipping reminders.');
             continue;
           }
         }
 
-        // ------------------------------------------------------
-        // MIDDAY MESSAGES
-        // ------------------------------------------------------
-
-        final middayMessages = [
-          'How\'s your day going? 💜 '
-              'Take a minute to write it down.',
-
-          'Hey 👋 You haven\'t written yet. '
-              'Even a few words are enough.',
-
-          'Pause for a moment 💜 '
-              'What\'s on your mind today?',
-
-          'Your diary is waiting 📖 '
-              'Write something about your day so far.',
-
-          'You don\'t need a big story. '
-              'One honest thought is enough 💜',
-
-          'Capture a little piece of today '
-              'before the day gets busy 📝',
-        ];
-
-        // ------------------------------------------------------
-        // EVENING MESSAGES
-        // ------------------------------------------------------
-
-        final eveningMessages = [
-          'How was your day? 🌆 '
-              'Take a moment to put it into words.',
-
-          'Your day is becoming a memory. '
-              'Save a little piece of it 📝',
-
-          'Good day or difficult day — '
-              'both deserve a place in your diary 💜',
-
-          'What happened today that '
-              'you don\'t want to forget? 📖',
-
-          'Take a few minutes for yourself 💜 '
-              'How did today really feel?',
-
-          'Your diary doesn\'t need perfection. '
-              'Just tell it what happened today.',
-        ];
-
-        // ------------------------------------------------------
-        // NIGHT MESSAGES
-        // ------------------------------------------------------
-
-        final nightMessages = [
-          'Before today becomes yesterday 🌙 '
-              'Write a few words about it.',
-
-          'You haven\'t written anything today 💜 '
-              'Take a minute to capture your day.',
-
-          'How are you feeling tonight? '
-              'Leave those thoughts somewhere safe 🌙',
-
-          'One last thing before you rest — '
-              'tell your diary how today went 💜',
-
-          'Your future self may love reading about today. '
-              'Leave a little memory 📝',
-
-          'No need for a long entry. '
-              'Just write what today felt like 💜',
-
-          'Close the day with a few honest words. '
-              'Your diary is waiting 🌙',
-        ];
-
-        // ------------------------------------------------------
-        // 12:00 PM
-        // ------------------------------------------------------
+        final middayMsg = 'How\'s your day going? 💜 Take a minute to write it down.';
+        final eveningMsg = 'Your day is becoming a memory. Save a little piece of it 📝';
+        final nightMsg = 'Before today becomes yesterday 🌙 Write a few words about it.';
 
         if (await _scheduleDiaryNotification(
           id: _diaryNotificationId(targetDate, 1),
@@ -810,14 +459,8 @@ class NotificationService {
           hour: 12,
           minute: 0,
           title: 'A moment for yourself 💜',
-          message: middayMessages[random.nextInt(middayMessages.length)],
-        )) {
-          totalScheduled++;
-        }
-
-        // ------------------------------------------------------
-        // 6:00 PM
-        // ------------------------------------------------------
+          message: middayMsg,
+        )) totalScheduled++;
 
         if (await _scheduleDiaryNotification(
           id: _diaryNotificationId(targetDate, 2),
@@ -825,14 +468,8 @@ class NotificationService {
           hour: 18,
           minute: 0,
           title: 'How was your day? 🌆',
-          message: eveningMessages[random.nextInt(eveningMessages.length)],
-        )) {
-          totalScheduled++;
-        }
-
-        // ------------------------------------------------------
-        // 10:00 PM
-        // ------------------------------------------------------
+          message: eveningMsg,
+        )) totalScheduled++;
 
         if (await _scheduleDiaryNotification(
           id: _diaryNotificationId(targetDate, 3),
@@ -840,63 +477,30 @@ class NotificationService {
           hour: 22,
           minute: 0,
           title: 'Before today ends 🌙',
-          message: nightMessages[random.nextInt(nightMessages.length)],
-        )) {
-          totalScheduled++;
-        }
+          message: nightMsg,
+        )) totalScheduled++;
       }
-
-      debugPrint('');
-      debugPrint('========================================');
-      debugPrint('✅ $totalScheduled diary reminders scheduled.');
-      debugPrint('========================================');
-    } catch (e, stackTrace) {
-      debugPrint('❌ Diary reminder scheduling failed: $e');
-
-      debugPrint('$stackTrace');
+      debugPrint('[RDIARY][NOTIFICATION] Diary reminders scheduled: $totalScheduled');
+    } catch (e) {
+      debugPrint('[RDIARY][NOTIFICATION] Diary reminders FAILED: $e');
     }
   }
 
-  // ============================================================
-  // CHECK WHETHER A DIARY ENTRY EXISTS FOR DATE
-  // ============================================================
-  //
-  // IMPORTANT:
-  //
-  // This assumes your Firestore note documents contain:
-  //
-  // date: Timestamp
-  //
-  // If your actual field has another name, change 'date' below.
-  // ============================================================
-
-  static Future<bool> _hasDiaryEntryForDate(
-    String uid,
-    tz.TZDateTime date,
-  ) async {
+  static Future<bool> _hasDiaryEntryForDate(String uid, tz.TZDateTime date) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
-
     final startOfNextDay = startOfDay.add(const Duration(days: 1));
 
-    final snapshot =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('notes')
-            .where(
-              'date',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-            )
-            .where('date', isLessThan: Timestamp.fromDate(startOfNextDay))
-            .limit(1)
-            .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('notes')
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('date', isLessThan: Timestamp.fromDate(startOfNextDay))
+        .limit(1)
+        .get();
 
     return snapshot.docs.isNotEmpty;
   }
-
-  // ============================================================
-  // SCHEDULE ONE DIARY NOTIFICATION
-  // ============================================================
 
   static Future<bool> _scheduleDiaryNotification({
     required int id,
@@ -907,135 +511,54 @@ class NotificationService {
     required String message,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
+    final scheduledTime = tz.TZDateTime(tz.local, date.year, date.month, date.day, hour, minute);
 
-    final scheduledTime = tz.TZDateTime(
-      tz.local,
-      date.year,
-      date.month,
-      date.day,
-      hour,
-      minute,
-    );
+    if (!scheduledTime.isAfter(now)) return false;
 
-    // Never schedule reminders in the past.
-    if (!scheduledTime.isAfter(now)) {
-      debugPrint(
-        '⏭️ Diary reminder skipped — '
-        '$scheduledTime already passed.',
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        message,
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rdiary_diary_reminders_v2',
+            'RDiary Diary Reminders',
+            channelDescription: 'Gentle reminders to write your daily diary',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
-
+      debugPrint('[RDIARY][NOTIFICATION] Diary reminder scheduled | id: $id | time: $scheduledTime');
+      return true;
+    } catch (e) {
+      debugPrint('[RDIARY][NOTIFICATION] Diary reminder FAILED | id: $id | error: $e');
       return false;
     }
-
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      message,
-      scheduledTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'rdiary_diary_reminders_v2',
-          'RDiary Diary Reminders',
-          channelDescription: 'Gentle reminders to write your daily diary',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
-
-    debugPrint('📖 $scheduledTime → $title');
-
-    debugPrint('💬 $message');
-
-    return true;
   }
-
-  // ============================================================
-  // UNIQUE DIARY NOTIFICATION ID
-  // ============================================================
-  //
-  // Separate ID range from goal reminders.
-  //
-  // Slot:
-  //
-  // 1 = Midday
-  // 2 = Evening
-  // 3 = Night
-  //
-  // ============================================================
 
   static int _diaryNotificationId(tz.TZDateTime date, int slot) {
-    return 100000000 +
-        ((date.year % 100) * 1000000) +
-        (date.month * 10000) +
-        (date.day * 100) +
-        slot;
+    return 100000000 + ((date.year % 100) * 1000000) + (date.month * 10000) + (date.day * 100) + slot;
   }
-
-  // ============================================================
-  // CANCEL DIARY REMINDERS FOR ONE DATE
-  // ============================================================
-  //
-  // Call this AFTER a diary entry is successfully saved.
-  //
-  // Example:
-  //
-  // User writes diary at 2 PM.
-  //
-  // 12 PM -> already happened
-  // 6 PM  -> cancelled
-  // 10 PM -> cancelled
-  //
-  // Tomorrow's reminders remain scheduled.
-  // ============================================================
-
-  static Future<void> cancelDiaryRemindersForDate(tz.TZDateTime date) async {
-    for (int slot = 1; slot <= 3; slot++) {
-      await _notificationsPlugin.cancel(_diaryNotificationId(date, slot));
-    }
-
-    debugPrint(
-      '💜 Diary reminders cancelled for '
-      '${date.year}-${date.month}-${date.day}.',
-    );
-  }
-
-  // ============================================================
-  // CANCEL UPCOMING DIARY REMINDERS
-  // ============================================================
-  //
-  // Used internally whenever the 7-day schedule is rebuilt.
-  // ============================================================
 
   static Future<void> cancelUpcomingDiaryReminders({int daysAhead = 14}) async {
     final now = tz.TZDateTime.now(tz.local);
-
     for (int dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
-      final date = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day + dayOffset,
-      );
-
+      final date = tz.TZDateTime(tz.local, now.year, now.month, now.day + dayOffset);
       for (int slot = 1; slot <= 3; slot++) {
         await _notificationsPlugin.cancel(_diaryNotificationId(date, slot));
       }
     }
-
-    debugPrint('🧹 Previous diary reminders cleared.');
+    debugPrint('[RDIARY][NOTIFICATION] Previous diary reminders cleared.');
   }
-
-  // ============================================================
-  // OPTIONAL: CANCEL EVERYTHING
-  // ============================================================
 
   static Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
-
-    debugPrint('🧹 All RDiary notifications cancelled.');
+    debugPrint('[RDIARY][NOTIFICATION] All RDiary notifications cancelled.');
   }
 }

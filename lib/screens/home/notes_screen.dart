@@ -427,25 +427,7 @@ class _NotesScreenState extends State<NotesScreen> {
                       // 🔥 FIRESTORE → NOTE MODEL
                       // ═════════════════════════════════════════
 
-                      final note = Note(
-                        id: docs[index].id,
-
-                        title: data['title'],
-
-                        content: data['content'] ?? '',
-
-                        date: date,
-
-                        mood: data['mood'] ?? 'neutral',
-
-                        imagePath: data['imagePath'],
-
-                        drawingPaths: List<String>.from(
-                          data['drawingPaths'] ?? [],
-                        ),
-
-                        status: data['status'],
-                      );
+                      final note = Note.fromFirestore(data, docs[index].id);
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,44 +1,27 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:scribble/scribble.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class ScribbleCanvasWidget extends StatefulWidget {
-  final Function(Uint8List?) onImageExported;
+  final ScribbleNotifier notifier;
 
-  const ScribbleCanvasWidget({super.key, required this.onImageExported});
+  const ScribbleCanvasWidget({super.key, required this.notifier});
 
   @override
   State<ScribbleCanvasWidget> createState() => _ScribbleCanvasWidgetState();
 }
 
 class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
-  late ScribbleNotifier _notifier;
-
   double _strokeWidth = 4;
   Color _currentColor = Colors.blue;
 
   @override
   void initState() {
     super.initState();
-    _notifier = ScribbleNotifier();
-  }
-
-  /// Export drawing as PNG
-  Future<void> _exportDrawing() async {
-    final imageBytes = await _notifier.renderImage();
-
-    if (imageBytes != null) {
-      widget.onImageExported(imageBytes as Uint8List?);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Drawing saved as image 🎨"),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    // Use the color and stroke width from the notifier if possible
+    // or set defaults
+    widget.notifier.setColor(_currentColor);
+    widget.notifier.setStrokeWidth(_strokeWidth);
   }
 
   void _openColorPicker() {
@@ -68,7 +51,7 @@ class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
                   setState(() {
                     _currentColor = tempColor;
                   });
-                  _notifier.setColor(tempColor);
+                  widget.notifier.setColor(tempColor);
                   Navigator.pop(context);
                 },
                 child: const Text("Select"),
@@ -76,12 +59,6 @@ class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
             ],
           ),
     );
-  }
-
-  @override
-  void dispose() {
-    _notifier.dispose();
-    super.dispose();
   }
 
   @override
@@ -104,29 +81,32 @@ class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
               "Draw Something",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.undo),
-                  onPressed: _notifier.canUndo ? _notifier.undo : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.redo),
-                  onPressed: _notifier.canRedo ? _notifier.redo : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: _notifier.clear,
-                ),
-                IconButton(
-                  icon: Icon(Icons.color_lens, color: _currentColor),
-                  onPressed: _openColorPicker,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check_circle, color: Colors.green),
-                  onPressed: _exportDrawing,
-                ),
-              ],
+            ValueListenableBuilder<ScribbleState>(
+              valueListenable: widget.notifier,
+              builder: (context, state, child) {
+                return Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      onPressed:
+                          widget.notifier.canUndo ? widget.notifier.undo : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.redo),
+                      onPressed:
+                          widget.notifier.canRedo ? widget.notifier.redo : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: widget.notifier.clear,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.color_lens, color: _currentColor),
+                      onPressed: _openColorPicker,
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -146,7 +126,7 @@ class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
                   setState(() {
                     _strokeWidth = value;
                   });
-                  _notifier.setStrokeWidth(value);
+                  widget.notifier.setStrokeWidth(value);
                 },
               ),
             ),
@@ -165,7 +145,7 @@ class _ScribbleCanvasWidgetState extends State<ScribbleCanvasWidget> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Scribble(notifier: _notifier),
+            child: Scribble(notifier: widget.notifier),
           ),
         ),
       ],

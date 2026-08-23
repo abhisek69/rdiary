@@ -2,11 +2,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'add_note_form.dart';
 import 'add_goal_form.dart';
+import '../../models/note.dart';
 
 class AddSubjectScreen extends StatefulWidget {
   final DateTime? selectedDate;
+  final Note? existingNote;
 
-  const AddSubjectScreen({super.key, this.selectedDate});
+  const AddSubjectScreen({super.key, this.selectedDate, this.existingNote});
 
   @override
   State<AddSubjectScreen> createState() => _AddSubjectScreenState();
@@ -14,6 +16,15 @@ class AddSubjectScreen extends StatefulWidget {
 
 class _AddSubjectScreenState extends State<AddSubjectScreen> {
   int _selectedIndex = 0; // 0 = Note, 1 = Goal
+
+  @override
+  void initState() {
+    super.initState();
+    // If we're editing a note, make sure we show the note tab
+    if (widget.existingNote != null) {
+      _selectedIndex = 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +77,7 @@ class _AddSubjectScreenState extends State<AddSubjectScreen> {
                       ? AddNoteForm(
                         key: const ValueKey(0),
                         selectedDate: widget.selectedDate,
+                        existingNote: widget.existingNote,
                       )
                       : const AddGoalForm(key: ValueKey(1)),
             ),

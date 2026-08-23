@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../models/mood_model.dart';
 import '../models/note.dart';
 import '../models/note_provider.dart';
+import '../screens/addSubject/addSubject.dart';
 import '../screens/view_note_screen.dart';
 
 class DiaryCard extends StatelessWidget {
@@ -153,6 +154,25 @@ class DiaryCard extends StatelessWidget {
   // 📓 BUILD
   // ═══════════════════════════════════════════════════════════════
 
+  Widget _buildImage(String path, {double height = 120, double? width}) {
+    final bool isNetwork = path.startsWith('http');
+    return isNetwork
+        ? Image.network(
+            path,
+            height: height,
+            width: width ?? double.infinity,
+            fit: BoxFit.cover,
+            loadingBuilder: (_, child, progress) =>
+                progress == null ? child : const Center(child: CircularProgressIndicator()),
+          )
+        : Image.file(
+            File(path),
+            height: height,
+            width: width ?? double.infinity,
+            fit: BoxFit.cover,
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -174,6 +194,12 @@ class DiaryCard extends StatelessWidget {
 
     final moodColor = _getMoodColor(context, mood);
 
+    final String? firstImagePath = note.imagePath ??
+        note.drawingPreviewUrl ??
+        (note.drawingPaths != null && note.drawingPaths!.isNotEmpty
+            ? note.drawingPaths!.first
+            : null);
+
     // ═════════════════════════════════════════════════════════════
     // GLASS COLORS
     // ═════════════════════════════════════════════════════════════
@@ -192,11 +218,12 @@ class DiaryCard extends StatelessWidget {
     final borderColor = moodColor.withOpacity(isDark ? 0.82 : 0.78);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ViewNoteScreen(note: note)),
         );
+        refreshCallback(note.date);
       },
 
       onLongPress: () {
@@ -271,150 +298,206 @@ class DiaryCard extends StatelessWidget {
                         // 😊 MOOD HEADER
                         // ═════════════════════════════════════
                         Row(
-                          mainAxisSize: MainAxisSize.min,
-
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // ─────────────────────────────────
-                            // BIGGER MOOD BADGE
-                            // ─────────────────────────────────
-                            Container(
-                              width: 38,
-                              height: 38,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // ─────────────────────────────────
+                                // BIGGER MOOD BADGE
+                                // ─────────────────────────────────
+                                Container(
+                                  width: 38,
+                                  height: 38,
 
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
 
-                                color: moodColor.withOpacity(
-                                  isDark ? 0.17 : 0.13,
-                                ),
-
-                                border: Border.all(
-                                  color: moodColor.withOpacity(
-                                    isDark ? 0.90 : 0.82,
-                                  ),
-                                  width: 1.5,
-                                ),
-
-                                boxShadow: [
-                                  BoxShadow(
                                     color: moodColor.withOpacity(
-                                      isDark ? 0.28 : 0.18,
+                                      isDark ? 0.17 : 0.13,
                                     ),
-                                    blurRadius: 10,
-                                    spreadRadius: 0.5,
+
+                                    border: Border.all(
+                                      color: moodColor.withOpacity(
+                                        isDark ? 0.90 : 0.82,
+                                      ),
+                                      width: 1.5,
+                                    ),
+
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: moodColor.withOpacity(
+                                          isDark ? 0.28 : 0.18,
+                                        ),
+                                        blurRadius: 10,
+                                        spreadRadius: 0.5,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
 
-                              child: Icon(
-                                mood.icon,
+                                  child: Icon(
+                                    mood.icon,
 
-                                // Bigger than old 19px.
-                                size: 22,
+                                    // Bigger than old 19px.
+                                    size: 22,
 
-                                // Full mood color.
-                                color: moodColor,
-                              ),
+                                    // Full mood color.
+                                    color: moodColor,
+                                  ),
+                                ),
+
+                                const SizedBox(width: 10),
+
+                                // ─────────────────────────────────
+                                // MOOD NAME
+                                // ─────────────────────────────────
+                                Text(
+                                  mood.label,
+
+                                  style: TextStyle(
+                                    color: moodColor,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.1,
+
+                                    shadows:
+                                        isDark
+                                            ? [
+                                              Shadow(
+                                                color: moodColor.withOpacity(
+                                                  0.45,
+                                                ),
+                                                blurRadius: 7,
+                                              ),
+                                            ]
+                                            : null,
+                                  ),
+                                ),
+                              ],
                             ),
-
-                            const SizedBox(width: 10),
-
-                            // ─────────────────────────────────
-                            // MOOD NAME
-                            // ─────────────────────────────────
-                            Text(
-                              mood.label,
-
-                              style: TextStyle(
-                                color: moodColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.1,
-
-                                shadows:
-                                    isDark
-                                        ? [
-                                          Shadow(
-                                            color: moodColor.withOpacity(0.45),
-                                            blurRadius: 7,
-                                          ),
-                                        ]
-                                        : null,
+                            PopupMenuButton<String>(
+                              icon: Icon(
+                                Icons.more_vert,
+                                color: onSurface.withOpacity(0.5),
                               ),
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => AddSubjectScreen(
+                                            selectedDate: note.date,
+                                            existingNote: note,
+                                          ),
+                                    ),
+                                  );
+                                  refreshCallback(note.date);
+                                } else if (value == 'delete') {
+                                  _confirmDelete(context);
+                                }
+                              },
+                              itemBuilder:
+                                  (context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit, size: 18),
+                                          SizedBox(width: 8),
+                                          Text('Edit'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.delete,
+                                            size: 18,
+                                            color: Colors.red,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                             ),
                           ],
                         ),
 
                         const SizedBox(height: 11),
 
-                        // ═════════════════════════════════════
-                        // 📝 TITLE
-                        // ═════════════════════════════════════
-                        if (note.title != null &&
-                            note.title!.trim().isNotEmpty) ...[
-                          Text(
-                            note.title!,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // ═════════════════════════════════════
+                                  // 📝 TITLE
+                                  // ═════════════════════════════════════
+                                  if (note.title != null &&
+                                      note.title!.trim().isNotEmpty) ...[
+                                    Text(
+                                      note.title!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color:
+                                            isDark
+                                                ? Colors.white
+                                                : onSurface.withOpacity(0.95),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                  ],
 
-                            maxLines: 1,
-
-                            overflow: TextOverflow.ellipsis,
-
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-
-                              color:
-                                  isDark
-                                      ? Colors.white
-                                      : onSurface.withOpacity(0.95),
+                                  // ═════════════════════════════════════
+                                  // 📖 CONTENT
+                                  // ═════════════════════════════════════
+                                  if (note.content.trim().isNotEmpty)
+                                    Text(
+                                      note.content.trim(),
+                                      maxLines: firstImagePath != null ? 3 : 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        height: 1.4,
+                                        color:
+                                            isDark
+                                                ? Colors.white.withOpacity(0.82)
+                                                : onSurface.withOpacity(0.90),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
 
-                          const SizedBox(height: 6),
-                        ],
-
-                        // ═════════════════════════════════════
-                        // 📖 CONTENT
-                        // ═════════════════════════════════════
-                        if (note.content.trim().isNotEmpty)
-                          Text(
-                            note.content.trim(),
-
-                            maxLines: 2,
-
-                            overflow: TextOverflow.ellipsis,
-
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.4,
-
-                              color:
-                                  isDark
-                                      ? Colors.white.withOpacity(0.82)
-                                      : onSurface.withOpacity(0.90),
-                            ),
-                          ),
-
-                        // ═════════════════════════════════════
-                        // 🖼 IMAGE / DRAWING
-                        // ═════════════════════════════════════
-                        if (note.imagePath != null ||
-                            (note.drawingPaths != null &&
-                                note.drawingPaths!.isNotEmpty)) ...[
-                          const SizedBox(height: 10),
-
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-
-                            child: Image.file(
-                              File(note.imagePath ?? note.drawingPaths!.first),
-
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
+                            // ═════════════════════════════════════
+                            // 🖼 SMALL IMAGE / DRAWING PREVIEW
+                            // ═════════════════════════════════════
+                            if (firstImagePath != null) ...[
+                              const SizedBox(width: 12),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: _buildImage(
+                                  firstImagePath,
+                                  height: 70,
+                                  width: 70,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
 
                         // ═════════════════════════════════════
                         // 🏁 STATUS

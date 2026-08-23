@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/note_provider.dart';
 
@@ -27,6 +28,15 @@ Future<void> main() async {
   await Firebase.initializeApp();
 
   // ============================================================
+  // SUPABASE
+  // ============================================================
+
+  await Supabase.initialize(
+    url: 'https://qdlwnbedbtsiebbmaoft.supabase.co',
+    anonKey: 'sb_publishable_jiYejeVC7icUUllln6BMLA_ULqq8Rqj',
+  );
+
+  // ============================================================
   // NOTIFICATIONS
   // ============================================================
 
@@ -38,6 +48,9 @@ Future<void> main() async {
 
   // Trigger Instant Welcome Notification
   await NotificationService.showWelcomeNotification();
+
+  // Run Diagnostics
+  await NotificationService.runDiagnostics();
 
   // ============================================================
   // START APP

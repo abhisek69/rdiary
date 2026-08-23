@@ -9,7 +9,7 @@ android {
     namespace = "com.example.rdiary"
     compileSdk = 36
     buildToolsVersion = "34.0.0"
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.example.rdiary"
@@ -22,6 +22,12 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
